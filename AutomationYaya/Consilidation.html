@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Reconciliation</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a1a; padding: 2rem; }
+.wrap { max-width: 900px; margin: 0 auto; }
+h1 { font-size: 20px; font-weight: 500; margin-bottom: 1.5rem; color: #1a1a1a; }
+h2 { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 0.5rem; }
+.section { background: #fff; border: 0.5px solid #ddd; border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+.hint { font-size: 12px; color: #888; margin-bottom: 8px; }
+textarea { width: 100%; min-height: 100px; font-size: 12px; font-family: 'Courier New', monospace; border: 0.5px solid #ccc; border-radius: 8px; padding: 10px; color: #1a1a1a; background: #fafafa; resize: vertical; }
+textarea:focus { outline: none; border-color: #999; }
+button { background: transparent; border: 0.5px solid #ccc; border-radius: 8px; padding: 7px 18px; font-size: 13px; cursor: pointer; color: #1a1a1a; margin-top: 8px; }
+button:hover { background: #f0f0f0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 1rem; }
+th { text-align: left; padding: 8px 10px; font-weight: 500; font-size: 12px; color: #888; border-bottom: 0.5px solid #e0e0e0; background: #fafafa; }
+td { padding: 8px 10px; border-bottom: 0.5px solid #f0f0f0; color: #1a1a1a; vertical-align: middle; }
+td.num, th.num { text-align: right; }
+.mews-input { width: 100px; border: 0.5px solid #ccc; border-radius: 4px; padding: 4px 6px; font-size: 13px; text-align: right; background: #fff; color: #1a1a1a; font-family: inherit; }
+.mews-input:focus { outline: none; border-color: #999; }
+.diff-pos { color: #2a7a4a; }
+.diff-neg { color: #c0392b; }
+.diff-zero { color: #aaa; }
+tfoot td { font-weight: 500; background: #fafafa; border-top: 0.5px solid #ccc; }
+.export-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+.hidden { display: none; }
+.ref-link { color: #1a6bb5; text-decoration: none; font-size: 13px; }
+#copy-msg { font-size: 12px; color: #888; }
+@media (prefers-color-scheme: dark) {
+  body { background: #1a1a1a; color: #e8e8e8; }
+  .section { background: #242424; border-color: #333; }
+  h1, h2 { color: #e8e8e8; }
+  textarea { background: #1e1e1e; border-color: #444; color: #e8e8e8; }
+  th { background: #1e1e1e; color: #aaa; border-color: #333; }
+  td { color: #e8e8e8; border-color: #2a2a2a; }
+  tfoot td { background: #1e1e1e; border-color: #444; }
+  .mews-input { background: #2a2a2a; border-color: #444; color: #e8e8e8; }
+  button { border-color: #444; color: #e8e8e8; }
+  button:hover { background: #2a2a2a; }
+  .diff-pos { color: #5dba80; }
+  .diff-neg { color: #e07070; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Booking.com — Mews Reconciliation</h1>
+
+  <div class="section">
+    <h2>Step 1 — paste booking data</h2>
+    <p class="hint">Copy everything from your Booking.com payout statement — headers and totals included.</p>
+    <textarea id="raw" placeholder="Paste your Booking.com payout table here..."></textarea>
+    <div><button onclick="parseData()">Parse →</button></div>
+  </div>
+
+  <div id="table-section" class="section hidden">
+    <h2>Step 2 — enter Mews amounts</h2>
+    <p class="hint">Fill in the Mews column manually for each booking.</p>
+    <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Booking ref</th>
+          <th>Guest name</th>
+          <th>Checkout</th>
+          <th class="num">Booking (€)</th>
+          <th class="num">Mews (€)</th>
+          <th class="num">Difference (€)</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
+    </table>
+    </div>
+    <div class="export-row">
+      <button onclick="copyTable()">Copy as text</button>
+      <button onclick="downloadCSV()">Download CSV</button>
+      <span id="copy-msg"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+let rows = [];
+
+function parseEuro(str) {
+  if (!str) return null;
+  let s = str.replace(/€/g, '').replace(/[\s\u00a0\u202f\u2009]+/g, '');
+  if (/\d{1,3},\d{3}[.,]?\d*/.test(s)) s = s.replace(/,(?=\d{3})/g, '');
+  s = s.replace(/,(\d{2})$/, '.$1');
+  s = s.replace(/,/g, '');
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function isEuro(s) { return /€/.test(s) && parseEuro(s) !== null; }
+function isDateStr(s) { return /^\d{1,2}\s+[a-z]{3}/i.test(s.trim()) || /^[a-z]{3}\s+\d{1,2}/i.test(s.trim()); }
+function isReservationType(s) { return /^(reservation|cancellation|no-show)$/i.test(s.trim()); }
+function isBookingRef(s) { return /^\d{7,12}$/.test(s.trim()); }
+
+function isHeaderOrFooter(parts) {
+  const joined = parts.join(' ').toLowerCase();
+  if (/booking reference/i.test(joined)) return true;
+  if (/totals\s*\(/i.test(joined)) return true;
+  if (/^total amount/i.test(joined)) return true;
+  if (/^net payout/i.test(joined)) return true;
+  if (parts.length <= 2 && /^(commission|vat|payments|service fee|net|amount|check|type|guest)$/i.test(parts[0])) return true;
+  return false;
+}
+
+function parseData() {
+  const raw = document.getElementById('raw').value.trim();
+  if (!raw) return;
+  const lines = raw.split('\n').filter(l => l.trim());
+  rows = [];
+  for (const line of lines) {
+    const parts = line.split('\t').map(p => p.trim());
+    if (isHeaderOrFooter(parts)) continue;
+    if (parts.length < 4) continue;
+    if (!isBookingRef(parts[0])) continue;
+    let i = 0;
+    let ref = parts[i++];
+    if (i < parts.length && isReservationType(parts[i])) i++;
+    let guest = (i < parts.length && !isDateStr(parts[i]) && !isEuro(parts[i])) ? parts[i++] : '';
+    if (i < parts.length && isDateStr(parts[i])) i++;
+    let checkout = (i < parts.length && isDateStr(parts[i])) ? parts[i++] : '';
+    let amount = null;
+    for (let j = i; j < parts.length; j++) {
+      if (isEuro(parts[j])) { amount = parseEuro(parts[j]); break; }
+    }
+    if (amount === null || !guest) continue;
+    rows.push({ ref, guest, checkout, booking: amount, mews: '' });
+  }
+  if (rows.length === 0) { alert('Could not parse any rows.'); return; }
+  renderTable();
+  document.getElementById('table-section').classList.remove('hidden');
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  rows.forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><a class="ref-link" href="https://admin.booking.com/hotel/hoteladmin/extranet_ng/manage/reservation.html?res_id=${r.ref}" target="_blank">${r.ref}</a></td>
+      <td>${r.guest}</td>
+      <td>${r.checkout}</td>
+      <td class="num">${fmtEur(r.booking)}</td>
+      <td class="num"><input class="mews-input" type="text" placeholder="0,00" value="${r.mews}" oninput="updateMews(${i}, this.value)" /></td>
+      <td class="num" id="diff-${i}">${diffCell(r.booking, r.mews)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateTotals();
+}
+
+function updateMews(i, val) {
+  rows[i].mews = val;
+  document.getElementById('diff-'+i).innerHTML = diffCell(rows[i].booking, val);
+  updateTotals();
+}
+
+function parseMews(val) {
+  if (val === '' || val === null || val === undefined) return null;
+  const n = parseFloat(String(val).replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+
+function fmtEur(n) {
+  if (n === null || n === undefined || n === '') return '—';
+  return '€\u202f' + Number(n).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function diffCell(booking, mewsRaw) {
+  const m = parseMews(mewsRaw);
+  if (m === null) return '<span class="diff-zero">—</span>';
+  const d = booking - m;
+  const cls = d > 0.005 ? 'diff-pos' : d < -0.005 ? 'diff-neg' : 'diff-zero';
+  const sign = d > 0.005 ? '+' : '';
+  return `<span class="${cls}">${sign}${fmtEur(d)}</span>`;
+}
+
+function updateTotals() {
+  const tfoot = document.getElementById('tfoot');
+  let totB = 0, totM = 0, allMews = true;
+  rows.forEach(r => {
+    totB += r.booking;
+    const m = parseMews(r.mews);
+    if (m === null) allMews = false; else totM += m;
+  });
+  tfoot.innerHTML = `<tr>
+    <td colspan="3"><strong>Total</strong></td>
+    <td class="num">${fmtEur(totB)}</td>
+    <td class="num">${allMews ? fmtEur(totM) : '—'}</td>
+    <td class="num">${allMews ? diffCell(totB, totM) : '<span class="diff-zero">—</span>'}</td>
+  </tr>`;
+}
+
+function copyTable() {
+  let txt = 'Booking ref\tGuest name\tCheckout\tBooking (€)\tMews (€)\tDifference (€)\n';
+  rows.forEach(r => {
+    const m = parseMews(r.mews);
+    const d = m !== null ? (r.booking - m).toFixed(2) : '';
+    txt += [r.ref, r.guest, r.checkout, r.booking.toFixed(2), m !== null ? m.toFixed(2) : '', d].join('\t') + '\n';
+  });
+  navigator.clipboard.writeText(txt).then(() => {
+    const msg = document.getElementById('copy-msg');
+    msg.textContent = 'Copied!';
+    setTimeout(() => msg.textContent = '', 2000);
+  });
+}
+
+function downloadCSV() {
+  let csv = 'Booking ref,Guest name,Checkout,Booking (EUR),Mews (EUR),Difference (EUR)\n';
+  rows.forEach(r => {
+    const m = parseMews(r.mews);
+    const d = m !== null ? (r.booking - m).toFixed(2) : '';
+    csv += [r.ref, `"${r.guest}"`, `"${r.checkout}"`, r.booking.toFixed(2), m !== null ? m.toFixed(2) : '', d].join(',') + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'booking_reconciliation.csv';
+  a.click();
+}
+</script>
+</body>
+</html>

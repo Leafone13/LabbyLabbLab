@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PVL Meetings Formatter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+  :root {
+    --black: #0a0a0a;
+    --white: #ffffff;
+    --yellow: #FFE600;
+    --gray-100: #f4f4f4;
+    --gray-200: #e8e8e8;
+    --gray-400: #999;
+    --gray-600: #555;
+    --green: #00b341;
+    --orange: #f90;
+    --red: #cc3300;
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--gray-100);
+    color: var(--black);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--black);
+    color: var(--white);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .tagline {
+    font-size: 11px;
+    color: var(--gray-400);
+    letter-spacing: 0.05em;
+  }
+  .btn-api-key {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid #444;
+    background: transparent;
+    color: var(--gray-400);
+    letter-spacing: 0.04em;
+    transition: all 0.15s;
+  }
+  .btn-api-key:hover { border-color: #888; color: var(--white); }
+  .btn-api-key.has-key { border-color: var(--green); color: var(--green); }
+
+  /* ── LAYOUT ── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    height: calc(100vh - 57px);
+  }
+
+  /* ── LEFT PANEL ── */
+  .input-panel {
+    background: var(--white);
+    border-right: 1px solid var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    gap: 16px;
+    overflow: hidden;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+  }
+
+  .entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .entry-block {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .entry-block.parsing  { border-color: var(--yellow); }
+  .entry-block.ok       { border-color: var(--green); }
+  .entry-block.warn     { border-color: var(--orange); }
+  .entry-block.err      { border-color: var(--red); }
+
+  .split-banner {
+    background: var(--yellow);
+    padding: 7px 12px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .split-banner.hidden { display: none; }
+  .btn-split {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .entry-header {
+    background: var(--gray-100);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--gray-600);
+    letter-spacing: 0.04em;
+  }
+  .entry-header-left { display: flex; align-items: center; gap: 10px; }
+
+  .entry-status { font-size: 10px; letter-spacing: 0.03em; }
+  .entry-status.ok      { color: var(--green); }
+  .entry-status.warn    { color: var(--orange); }
+  .entry-status.err     { color: var(--red); }
+  .entry-status.parsing { color: #aa9900; }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--red);
+    font-size: 13px;
+    line-height: 1;
+    padding: 0 2px;
+    font-family: inherit;
+  }
+
+  textarea {
+    width: 100%;
+    height: 140px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    border: none;
+    background: var(--white);
+    color: var(--black);
+    resize: none;
+    outline: none;
+    display: block;
+  }
+  textarea::placeholder { color: var(--gray-400); }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover:not(:disabled) { opacity: 0.8; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-add      { background: var(--black); color: var(--white); }
+  .btn-generate { background: var(--yellow); color: var(--black); font-weight: 500; }
+  .btn-clear    { background: var(--gray-200); color: var(--gray-600); margin-left: auto; }
+
+  .spinner {
+    width: 11px; height: 11px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: var(--black);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+    flex-shrink: 0;
+  }
+  .generating .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RIGHT PANEL ── */
+  .output-panel {
+    background: var(--white);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .output-toolbar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .output-toolbar-left { display: flex; align-items: center; gap: 14px; }
+  .booking-count {
+    font-size: 11px;
+    color: var(--gray-400);
+    letter-spacing: 0.04em;
+  }
+  .toolbar-btn-group { display: flex; gap: 8px; }
+
+  .btn-copy {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    background: var(--gray-200);
+    color: var(--gray-600);
+    transition: all 0.15s;
+  }
+  .btn-copy:hover { opacity: 0.8; }
+  .btn-copy.copied { background: var(--green); color: var(--white); }
+
+  .btn-print {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    background: var(--black);
+    color: var(--white);
+  }
+  .btn-print:hover { opacity: 0.8; }
+
+  .output-preview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 32px;
+  }
+
+  /* ── PRINT SHEET ── */
+  #sheet {
+    max-width: 680px;
+    margin: 0 auto;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .sheet-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: -1px;
+    margin-bottom: 48px;
+  }
+
+  .date-group { margin-bottom: 36px; }
+
+  .date-heading {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+    border-top: 2px solid var(--black);
+    border-bottom: 2px solid var(--black);
+    padding: 6px 0;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .booking {
+    text-align: center;
+    font-size: 15px;
+    line-height: 2;
+    font-weight: 500;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--gray-200);
+  }
+  .booking:last-child { border-bottom: none; }
+
+  .hl { background: var(--yellow); padding: 0 3px; }
+
+  .editable[contenteditable] {
+    cursor: text;
+    outline: none;
+    border-bottom: 1.5px dashed #aaa;
+    min-width: 20px;
+    display: inline-block;
+  }
+  .editable[contenteditable]:hover { border-bottom-color: #555; }
+  .editable[contenteditable]:focus { border-bottom: 1.5px solid #000; }
+
+  .meal-select {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px dashed #aaa;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    color: var(--black);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .yn-select {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    font-weight: 500;
+    background: var(--yellow);
+    border: none;
+    border-bottom: 1.5px dashed #aaa;
+    cursor: pointer;
+    outline: none;
+    padding: 0 2px;
+    color: var(--black);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .yn-select:hover { border-bottom-color: #555; }
+  .yn-select:focus { border-bottom: 1.5px solid #000; }
+
+  .empty-state {
+    color: var(--gray-400);
+    font-size: 12px;
+    text-align: center;
+    margin-top: 60px;
+    line-height: 2;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: var(--white);
+    border-radius: 6px;
+    padding: 32px;
+    max-width: 440px;
+    width: calc(100% - 48px);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+  }
+  .modal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .modal p {
+    font-size: 12px;
+    color: var(--gray-600);
+    line-height: 1.8;
+    margin-bottom: 18px;
+  }
+  .modal a { color: var(--black); }
+  .modal input[type="text"] {
+    width: 100%;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    outline: none;
+    color: var(--black);
+    letter-spacing: 0.02em;
+  }
+  .modal input[type="text"]:focus { border-color: var(--black); }
+  .modal-note {
+    font-size: 11px;
+    color: var(--gray-400);
+    margin-top: 10px;
+    line-height: 1.7;
+  }
+  .modal-btn-row { display: flex; gap: 8px; margin-top: 20px; }
+  .btn-save-key {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    flex: 1;
+    background: var(--yellow);
+    color: var(--black);
+  }
+  .btn-save-key:hover { opacity: 0.85; }
+  .btn-skip-key {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: var(--gray-200);
+    color: var(--gray-600);
+  }
+  .btn-skip-key:hover { opacity: 0.85; }
+
+  /* ── CONFIRM DIALOG ── */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  .confirm-overlay.hidden { display: none; }
+  .confirm-box {
+    background: var(--white);
+    border-radius: 6px;
+    padding: 24px;
+    max-width: 300px;
+    width: calc(100% - 48px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  }
+  .confirm-box p {
+    font-size: 13px;
+    margin-bottom: 18px;
+    line-height: 1.6;
+    color: var(--black);
+  }
+  .confirm-btn-row { display: flex; gap: 8px; }
+  .btn-confirm-yes {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    flex: 1;
+    background: var(--red);
+    color: var(--white);
+  }
+  .btn-confirm-no {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    flex: 1;
+    background: var(--gray-200);
+    color: var(--gray-600);
+  }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: white; }
+    header, .input-panel, .output-toolbar { display: none !important; }
+    .workspace { display: block; height: auto; }
+    .output-panel { display: block; }
+    .output-preview { padding: 20px; overflow: visible; }
+    #sheet { max-width: 100%; }
+    .booking { page-break-inside: avoid; }
+    .editable[contenteditable] { border-bottom: none !important; }
+    .meal-select, .yn-select {
+      border-bottom: none !important;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h2>Claude API Key</h2>
+    <p>
+      This tool uses Claude AI to extract group names, dates, rooms, pax counts, and meals from your Mews data — much more reliably than pattern matching alone.<br><br>
+      Your key is saved only in <em>this browser</em> and is sent directly to Anthropic's API. Anthropic deletes API data within 7 days and never uses it for training.
+    </p>
+    <input type="text" id="apiKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false" />
+    <p class="modal-note">
+      Get a key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys.<br>
+      Cost: fractions of a cent per booking. Works without a key too (regex fallback).
+    </p>
+    <div class="modal-btn-row">
+      <button class="btn-save-key" id="btnSaveKey">Save & continue</button>
+      <button class="btn-skip-key" id="btnSkipKey">Use without AI</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM CLEAR DIALOG -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>Clear all entries and reset the sheet?</p>
+    <div class="confirm-btn-row">
+      <button class="btn-confirm-yes" id="btnConfirmYes">Clear all</button>
+      <button class="btn-confirm-no" id="btnConfirmNo">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <h1>PVL Meetings</h1>
+  <div class="header-right">
+    <span class="tagline">PASTE MEWS DATA · GENERATE · PRINT</span>
+    <button class="btn-api-key" id="btnApiKey">⚙ API Key</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- LEFT: Input -->
+  <div class="input-panel">
+    <div class="panel-label">Reservations — paste one Mews block per entry</div>
+
+    <div class="entries-list" id="entriesList"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-add" id="btnAdd">+ Add entry</button>
+      <button class="btn btn-generate" id="btnGenerate">
+        <span class="spinner" id="spinner"></span>
+        <span id="generateLabel">Generate ↗</span>
+      </button>
+      <button class="btn btn-clear" id="btnClear">Clear all</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Output -->
+  <div class="output-panel">
+    <div class="output-toolbar">
+      <div class="output-toolbar-left">
+        <span class="panel-label">Print preview</span>
+        <span class="booking-count" id="bookingCount"></span>
+      </div>
+      <div class="toolbar-btn-group">
+        <button class="btn-copy" id="btnCopy">Copy as text</button>
+        <button class="btn-print" id="btnPrint">Print / Save PDF</button>
+      </div>
+    </div>
+    <div class="output-preview">
+      <div id="sheet">
+        <div class="sheet-title">PVL Meetings</div>
+        <div class="empty-state">
+          Paste Mews reservation data on the left<br>
+          and click <strong>Generate</strong> to build the sheet.<br><br>
+          <span style="font-size:11px">Tip: ⌘ + Enter to generate</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONSTANTS ──
+const MEALS = [
+  'Breakfast','Lunch','Dinner',
+  'Breakfast & Lunch','Breakfast & Dinner','Lunch & Dinner',
+  'Breakfast & Lunch & Dinner',
+  'Catering','None'
+];
+const LS_KEY   = 'pvl_entries_v2';
+const LS_APIKEY = 'pvl_api_key';
+
+// ── STATE ──
+let entryCount = 0;
+let currentBookings = [];
+let isGenerating = false;
+let confirmCallback = null;
+
+// ── API KEY HELPERS ──
+const getApiKey = () => localStorage.getItem(LS_APIKEY) || '';
+const setApiKey = k => localStorage.setItem(LS_APIKEY, k);
+
+function updateApiKeyBtn() {
+  const btn = document.getElementById('btnApiKey');
+  if (getApiKey()) {
+    btn.textContent = '✓ API Key';
+    btn.classList.add('has-key');
+  } else {
+    btn.textContent = '⚙ API Key';
+    btn.classList.remove('has-key');
+  }
+}
+
+// ── API KEY MODAL ──
+function showApiModal() {
+  document.getElementById('apiKeyInput').value = getApiKey();
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function hideApiModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+}
+document.getElementById('btnApiKey').addEventListener('click', showApiModal);
+document.getElementById('btnSaveKey').addEventListener('click', () => {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (v) setApiKey(v);
+  hideApiModal();
+  updateApiKeyBtn();
+});
+document.getElementById('btnSkipKey').addEventListener('click', hideApiModal);
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) hideApiModal();
+});
+
+// ── CONFIRM DIALOG ──
+function showConfirm(cb) {
+  confirmCallback = cb;
+  document.getElementById('confirmOverlay').classList.remove('hidden');
+}
+function hideConfirm() {
+  document.getElementById('confirmOverlay').classList.add('hidden');
+  confirmCallback = null;
+}
+document.getElementById('btnConfirmYes').addEventListener('click', () => {
+  hideConfirm();
+  if (confirmCallback) confirmCallback();
+});
+document.getElementById('btnConfirmNo').addEventListener('click', hideConfirm);
+
+// ── ENTRIES ──
+function addEntry(prefill = '') {
+  entryCount++;
+  const id = 'entry-' + entryCount;
+  const list = document.getElementById('entriesList');
+
+  const block = document.createElement('div');
+  block.className = 'entry-block';
+  block.id = id;
+  block.innerHTML = `
+    <div class="split-banner hidden" id="split-${id}">
+      <span>Multiple reservations detected</span>
+      <button class="btn-split" onclick="splitEntry('${id}')">Split into separate entries</button>
+    </div>
+    <div class="entry-header">
+      <div class="entry-header-left">
+        <span>Entry ${entryCount}</span>
+        <span class="entry-status" id="status-${id}"></span>
+      </div>
+      <button class="btn-remove" onclick="removeEntry('${id}')" title="Remove">✕</button>
+    </div>
+    <textarea id="ta-${id}" placeholder="Paste raw Mews reservation data here…">${escHtml(prefill)}</textarea>
+  `;
+  list.appendChild(block);
+  list.scrollTop = list.scrollHeight;
+
+  const ta = block.querySelector('textarea');
+  ta.addEventListener('input', () => {
+    checkMultiBooking(id, ta.value);
+    persistEntries();
+  });
+
+  return id;
+}
+
+function removeEntry(id) {
+  document.getElementById(id)?.remove();
+  persistEntries();
+}
+
+function clearAll() {
+  document.getElementById('entriesList').innerHTML = '';
+  entryCount = 0;
+  currentBookings = [];
+  renderSheet([]);
+  persistEntries();
+}
+
+// ── MULTI-BOOKING DETECTION ──
+function checkMultiBooking(id, text) {
+  const count = (text.match(/\bArrival\b/gi) || []).length;
+  const banner = document.getElementById('split-' + id);
+  if (banner) banner.classList.toggle('hidden', count < 2);
+}
+
+function splitEntry(id) {
+  const ta = document.getElementById('ta-' + id);
+  if (!ta) return;
+  const raw = ta.value.trim();
+  const blocks = splitMewsBlocks(raw);
+  if (blocks.length < 2) return;
+
+  const el = document.getElementById(id);
+  el.remove();
+  blocks.forEach(b => { if (b.trim()) addEntry(b.trim()); });
+  persistEntries();
+}
+
+function splitMewsBlocks(raw) {
+  const lines = raw.split('\n');
+  const blocks = [];
+  let current = [];
+  let blanks = 0;
+
+  for (const line of lines) {
+    if (line.trim() === '') {
+      blanks++;
+      current.push(line);
+    } else {
+      if (blanks >= 2 && current.join('\n').trim()) {
+        blocks.push(current.join('\n').trim());
+        current = [];
+      }
+      blanks = 0;
+      current.push(line);
+    }
+  }
+  if (current.join('\n').trim()) blocks.push(current.join('\n').trim());
+  return blocks.length > 1 ? blocks : [raw];
+}
+
+// ── LOCAL STORAGE ──
+function persistEntries() {
+  const blocks = document.querySelectorAll('#entriesList .entry-block textarea');
+  const data = [...blocks].map(ta => ta.value);
+  localStorage.setItem(LS_KEY, JSON.stringify(data));
+}
+
+function restoreEntries() {
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    if (data.length) { data.forEach(t => addEntry(t)); return true; }
+  } catch {}
+  return false;
+}
+
+// ── AI PARSING ──
+async function parseWithAI(raw) {
+  const key = getApiKey();
+  if (!key) return null;
+
+  const prompt = `Extract structured meeting data from this Mews hotel reservation export. Return ONLY a valid JSON object — no markdown, no explanation.
+
+Fields required:
+- "group": The group or company name (not a booking code or system ID). Look in the Note (General) section first.
+- "date": Arrival date in DD/MM format (e.g. "15/04"). Extract only day and month.
+- "time": Arrival time in HH:MM format (e.g. "09:00").
+- "room": The assigned meeting room or space name.
+- "mealLabel": Exactly one of: "Breakfast", "Lunch", "Dinner", "Breakfast & Lunch", "Breakfast & Dinner", "Lunch & Dinner", "Breakfast & Lunch & Dinner", "Catering", "None". Detect from Products or Note sections (Dutch: ontbijt=Breakfast, lunch=Lunch, diner/dinner=Dinner).
+- "pax": Number of attendees as a plain number string (e.g. "25"). Look for pax, personen, Adults count.
+
+Use "" for any field you cannot determine. Return only the JSON object.
+
+Raw Mews data:
+${raw}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: 'You are a data extraction assistant. Extract fields from hotel PMS exports and return only valid JSON.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!res.ok) throw new Error('API ' + res.status);
+  const data = await res.json();
+  const text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+  return JSON.parse(text);
+}
+
+// ── FALLBACK (REGEX) PARSING ──
+function parseEntryFallback(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const text = lines.join('\n');
+
+  const noteBlockMatch = text.match(/Note\s*\(General\)[^\n]*\n([\s\S]*)/i);
+  const noteBlock = noteBlockMatch ? noteBlockMatch[1] : '';
+
+  const junkPatterns = [
+    /^[\d]+[\.:]/,/^-{2,}/,/^-\s/,/^->/,
+    /^(zaalopstelling|benodigdheden|programma|gemeentelijke|memo|nb\b|dieetwensen)/i,
+    /allerg/i,/geen vlees|no meat|no fish|shellfish|schelpdieren|noten|vegetari/i,
+    /^\*/,/^\(/,/gasten krijgen|welkomst|binnenkomst/i,
+    /volwassenen|kinderen|kinderkaart/i,/\d+\s*(personen|pax|persen)/i,
+    /^(lunch|dinner|diner|snack|ontbijt)\s+\d+/i,
+    /starten met|middag|ochtend|avond|om \d+[\.:]/i,
+    /[a-f0-9]{8}-[a-f0-9]{4}-/i,/proposales|mews operations/i,
+    /tickets\s+(ouwehands|dierenpark)/i,
+  ];
+  const isJunk = l => !l || l.length < 2 || junkPatterns.some(p => p.test(l));
+  const looksName = l => {
+    if (!l || l.length > 80 || isJunk(l)) return false;
+    if (/\b(krijgen|van het|bij|worden|volgt|inclusief|excl|boek)\b/i.test(l)) return false;
+    return /[A-ZÁÉÍÓÚÀÈÙÄËÏÖÜ]/.test(l);
+  };
+
+  let noteGroupName = null;
+  if (noteBlock) {
+    const noteLines = noteBlock.split('\n').map(l => l.trim());
+    let first = null;
+    for (const l of noteLines) {
+      if (looksName(l)) {
+        const parts = l.split(/\s+-\s+/);
+        let chosen = null;
+        for (const p of parts) {
+          const s = p.replace(/\s+\d+\s*(pax|personen|pers).*$/i,'').replace(/\s*->.*$/,'').trim();
+          if (/^(dinner|lunch|diner|ontbijt|breakfast|snack|buffet|var|memo)$/i.test(s)) continue;
+          if (s.length > 1 && looksName(s + ' x')) { chosen = s; break; }
+        }
+        if (!chosen) chosen = parts[0].replace(/\s+\d+\s*(pax|personen|pers).*$/i,'').replace(/\s*->.*$/,'').trim();
+        if (chosen?.length > 1) { first = chosen; break; }
+      }
+    }
+    let last = null;
+    for (let i = noteLines.length - 1; i >= 0; i--) {
+      if (looksName(noteLines[i])) { last = noteLines[i]; break; }
+    }
+    noteGroupName = (last && first) ? (last.split(' ').length <= 6 ? last : first) : (last || first);
+  }
+
+  let codeGroup = '';
+  const gn = text.match(/Group name\s*\n([^\n]+)/i);
+  if (gn) codeGroup = gn[1].replace(/-[A-Z0-9]{4,}$/,'').replace(/-\d+-\d+$/,'').trim();
+
+  const cm = text.match(/\*?\s*(?:__)?([A-Z][a-zA-Z.\-]+(?: [a-zA-Z]+)+ [A-Z][a-z]+)(?:__)?/)
+           || text.match(/\*?\s*(?:__)?([A-Z][a-z]+ [A-Z][a-z]+)(?:__)?/);
+  const companion = cm ? cm[1].trim() : null;
+  const afterAdults = text.match(/×\s*Adults\s*\n\s*\n?\s*([A-Z][a-zA-Z.\-]+(?: [a-zA-Z]+)*)/);
+  const guest = companion || (afterAdults ? afterAdults[1].trim() : null);
+
+  const group = (noteGroupName && !isJunk(noteGroupName) ? noteGroupName : null) || guest || codeGroup || '';
+
+  let date = '', time = '';
+  const arr = text.match(/Arrival\s*\n([\d\/]+)\s+([\d:]+)/i);
+  if (arr) {
+    const p = arr[1].split('/');
+    if (p.length >= 2) date = p[0] + '/' + p[1];
+    time = arr[2].slice(0,5);
+  }
+
+  let room = '';
+  const rm = text.match(/Assigned space\s*\n([^\n]+)/i);
+  if (rm) room = rm[1].trim();
+
+  let pax = '';
+  const px = text.match(/(\d+)\s*(personen|pax|persen)/i)
+           || text.match(/Adults\s*\n\s*(\d+)/i)
+           || text.match(/×\s*(\d+)\s*Adults/i);
+  if (px) pax = px[1];
+
+  const prodLines = text.match(/Products\s*\n([\s\S]*?)(?:\nPayment|\nOrigin|\nCreated|$)/i);
+  const search = ((prodLines ? prodLines[1] : '') + ' ' + noteBlock).toLowerCase();
+  const meals = [];
+  if (/breakfast|ontbijt/.test(search)) meals.push('Breakfast');
+  if (/lunch|lunchpakket|buffet/.test(search)) meals.push('Lunch');
+  if (/dinner|diner|3-gangen/.test(search)) meals.push('Dinner');
+  const mealLabel = meals.length ? meals.join(' & ') : 'Catering';
+
+  return { group, date, time, room, mealLabel, pax, yn: 'YES', _ai: false };
+}
+
+// ── GENERATE ──
+async function generate() {
+  if (isGenerating) return;
+  isGenerating = true;
+
+  const btnGen = document.getElementById('btnGenerate');
+  btnGen.classList.add('generating');
+  btnGen.disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('generateLabel').textContent = 'Parsing…';
+
+  const blocks = document.querySelectorAll('#entriesList .entry-block');
+  currentBookings = [];
+
+  for (const block of blocks) {
+    const ta = block.querySelector('textarea');
+    const raw = ta?.value.trim() || '';
+    if (!raw) continue;
+
+    const id = block.id;
+    const statusEl = document.getElementById('status-' + id);
+    block.className = 'entry-block parsing';
+    if (statusEl) { statusEl.textContent = 'parsing…'; statusEl.className = 'entry-status parsing'; }
+
+    let parsed = null;
+    let usedAI = false;
+
+    try {
+      const ai = await parseWithAI(raw);
+      if (ai && typeof ai === 'object') {
+        parsed = {
+          group:     ai.group     || '',
+          date:      ai.date      || '',
+          time:      ai.time      || '',
+          room:      ai.room      || '',
+          mealLabel: ai.mealLabel || 'Catering',
+          pax:       ai.pax       || '',
+          yn:        'YES',
+          _ai:       true
+        };
+        usedAI = true;
+      }
+    } catch(e) {
+      console.warn('AI parse failed, using fallback:', e.message);
+    }
+
+    if (!parsed) parsed = parseEntryFallback(raw);
+
+    currentBookings.push(parsed);
+
+    const missing = ['group','date','time','room'].filter(f => !parsed[f]);
+    block.classList.remove('parsing');
+    if (missing.length === 0) {
+      block.classList.add('ok');
+      if (statusEl) { statusEl.textContent = usedAI ? '✓ AI' : '✓'; statusEl.className = 'entry-status ok'; }
+    } else if (missing.length <= 2) {
+      block.classList.add('warn');
+      if (statusEl) { statusEl.textContent = `⚠ missing: ${missing.join(', ')}`; statusEl.className = 'entry-status warn'; }
+    } else {
+      block.classList.add('err');
+      if (statusEl) { statusEl.textContent = '✕ check entry'; statusEl.className = 'entry-status err'; }
+    }
+  }
+
+  renderSheet(currentBookings);
+  isGenerating = false;
+  btnGen.classList.remove('generating');
+  btnGen.disabled = false;
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('generateLabel').textContent = 'Generate ↗';
+}
+
+// ── RENDER ──
+function renderSheet(bookings) {
+  const sheet = document.getElementById('sheet');
+  const countEl = document.getElementById('bookingCount');
+
+  if (!bookings.length) {
+    sheet.innerHTML = `
+      <div class="sheet-title">PVL Meetings</div>
+      <div class="empty-state">
+        Paste Mews reservation data on the left<br>
+        and click <strong>Generate</strong> to build the sheet.<br><br>
+        <span style="font-size:11px">Tip: ⌘ + Enter to generate</span>
+      </div>`;
+    countEl.textContent = '';
+    return;
+  }
+
+  const byDate = {};
+  bookings.forEach((b, i) => {
+    const k = b.date || 'Unknown date';
+    (byDate[k] = byDate[k] || []).push({ ...b, _idx: i });
+  });
+  const sorted = Object.keys(byDate).sort((a, b) => {
+    const n = d => { const [dd,mm] = d.split('/'); return (+mm||99)*100 + (+dd||99); };
+    return n(a) - n(b);
+  });
+
+  countEl.textContent = `${bookings.length} booking${bookings.length !== 1 ? 's' : ''} · ${sorted.length} day${sorted.length !== 1 ? 's' : ''}`;
+
+  let html = '<div class="sheet-title">PVL Meetings</div>';
+  for (const date of sorted) {
+    html += `<div class="date-group"><div class="date-heading">${date}</div>`;
+    for (const b of byDate[date]) {
+      const opts = MEALS.map(m =>
+        `<option value="${m}"${m===b.mealLabel?' selected':''}>${m}</option>`
+      ).join('');
+      html += `<div class="booking" data-idx="${b._idx}">
+        GROUP: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="group" data-idx="${b._idx}">${esc(b.group)}</span>,<br>
+        ROOM: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="room" data-idx="${b._idx}">${esc(b.room)}</span>,
+        TIME: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="time" data-idx="${b._idx}">${esc(b.time)}</span>,
+        PAX: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="pax" data-idx="${b._idx}">${esc(b.pax)}</span>,<br>
+        <select class="meal-select" data-field="mealLabel" data-idx="${b._idx}">${opts}</select>:
+        <select class="yn-select" data-field="yn" data-idx="${b._idx}"><option>YES</option><option>NO</option></select>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  sheet.innerHTML = html;
+
+  sheet.querySelectorAll('.editable[contenteditable]').forEach(el => {
+    el.addEventListener('blur', () => {
+      currentBookings[+el.dataset.idx][el.dataset.field] = el.innerText.trim();
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+  });
+  sheet.querySelectorAll('.meal-select, .yn-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      currentBookings[+sel.dataset.idx][sel.dataset.field] = sel.value;
+    });
+  });
+}
+
+// ── COPY AS TEXT ──
+function copyAsText() {
+  if (!currentBookings.length) return;
+  const byDate = {};
+  currentBookings.forEach(b => {
+    const k = b.date || 'Unknown date';
+    (byDate[k] = byDate[k] || []).push(b);
+  });
+  const sorted = Object.keys(byDate).sort((a,b) => {
+    const n = d => { const [dd,mm] = d.split('/'); return (+mm||99)*100+(+dd||99); };
+    return n(a) - n(b);
+  });
+  let txt = 'PVL Meetings\n';
+  for (const date of sorted) {
+    txt += `\n── ${date} ──\n`;
+    for (const b of byDate[date]) {
+      txt += `GROUP: ${b.group||'—'}\n`;
+      txt += `ROOM: ${b.room||'—'}  |  TIME: ${b.time||'—'}  |  PAX: ${b.pax||'—'}\n`;
+      txt += `${b.mealLabel||'Catering'}: ${b.yn||'YES'}\n\n`;
+    }
+  }
+  navigator.clipboard.writeText(txt.trim()).then(() => {
+    const btn = document.getElementById('btnCopy');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── HELPERS ──
+function esc(str) {
+  return (str||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── KEYBOARD SHORTCUT ──
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); generate(); }
+});
+
+// ── WIRE UP BUTTONS ──
+document.getElementById('btnAdd').addEventListener('click', () => addEntry());
+document.getElementById('btnGenerate').addEventListener('click', generate);
+document.getElementById('btnClear').addEventListener('click', () => showConfirm(clearAll));
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+document.getElementById('btnCopy').addEventListener('click', copyAsText);
+
+// ── INIT ──
+updateApiKeyBtn();
+if (!restoreEntries()) addEntry();
+if (!getApiKey()) showApiModal();
+</script>
+</body>
+</html>

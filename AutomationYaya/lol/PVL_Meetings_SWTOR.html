@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PVL Meetings — REPUBLIC HOLONET TERMINAL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Rajdhani:wght@500;600;700&display=swap');
+
+  :root {
+    --bg:          #080600;
+    --bg2:         #0d0a01;
+    --panel:       rgba(16, 11, 1, 0.97);
+    --border:      #6b4a08;
+    --border-dim:  #3a2804;
+    --amber:       #c8850a;
+    --amber-bright:#f0b030;
+    --amber-glow:  rgba(200, 133, 10, 0.2);
+    --amber-dim:   #4a3006;
+    --text:        #b87c10;
+    --text-bright: #e8a820;
+    --text-dim:    #3d2a05;
+    --green:       #4a9a30;
+    --green-bright:#70c840;
+    --green-glow:  rgba(74, 154, 48, 0.18);
+    --orange:      #c86010;
+    --orange-bright:#f07020;
+    --orange-glow: rgba(200, 96, 16, 0.18);
+    --red:         #a02010;
+    --red-bright:  #d03020;
+    --red-glow:    rgba(160, 32, 16, 0.2);
+    --gold:        #d4a020;
+    --radius:      1px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── AMBER SCANLINES ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(200, 133, 10, 0.025) 3px,
+      rgba(200, 133, 10, 0.025) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── SUBTLE VIGNETTE ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  body {
+    font-family: 'VT323', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 16px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: #060400;
+    border-bottom: 2px solid var(--amber);
+    padding: 0 32px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    height: 58px;
+    box-shadow:
+      0 2px 0 var(--amber-dim),
+      0 4px 24px rgba(200, 133, 10, 0.15),
+      inset 0 -1px 0 var(--amber-dim);
+  }
+
+  /* top accent stripe */
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--amber), var(--amber-bright), var(--amber), transparent);
+    box-shadow: 0 0 12px var(--amber);
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 100%; height: 100%; }
+
+  header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    color: var(--amber-bright);
+    text-shadow: 0 0 10px var(--amber), 0 0 24px rgba(200,133,10,0.4);
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* blinking cursor dots */
+  .status-blips {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .blip {
+    width: 8px; height: 8px;
+    background: var(--amber);
+    box-shadow: 0 0 6px var(--amber);
+    animation: blink 1.4s step-end infinite;
+  }
+  .blip:nth-child(2) { animation-delay: 0.5s; background: var(--green-bright); box-shadow: 0 0 6px var(--green-bright); }
+  .blip:nth-child(3) { animation-delay: 1s; }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.1; } }
+
+  .btn-api-key {
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    padding: 5px 14px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    position: relative;
+  }
+  /* corner brackets */
+  .btn-api-key::before, .btn-api-key::after {
+    content: '';
+    position: absolute;
+    width: 5px; height: 5px;
+  }
+  .btn-api-key::before { top: -1px; left: -1px; border-top: 2px solid var(--amber); border-left: 2px solid var(--amber); }
+  .btn-api-key::after  { bottom: -1px; right: -1px; border-bottom: 2px solid var(--amber); border-right: 2px solid var(--amber); }
+  .btn-api-key:hover { border-color: var(--amber); color: var(--amber-bright); background: var(--amber-glow); }
+  .btn-api-key.has-key { border-color: var(--green); color: var(--green-bright); box-shadow: 0 0 8px var(--green-glow); }
+
+  /* ── LAYOUT ── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    height: calc(100vh - 58px);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── LEFT PANEL ── */
+  .input-panel {
+    background: var(--panel);
+    border-right: 2px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 14px;
+    overflow: hidden;
+  }
+
+  .panel-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-label::before {
+    content: '►';
+    color: var(--amber);
+    font-size: 10px;
+  }
+
+  .entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .entries-list::-webkit-scrollbar { width: 4px; }
+  .entries-list::-webkit-scrollbar-track { background: var(--border-dim); }
+  .entries-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* ── ENTRY BLOCK ── */
+  .entry-block {
+    border: 1px solid var(--border-dim);
+    position: relative;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  /* corner bracket decorations */
+  .entry-block::before, .entry-block::after {
+    content: '';
+    position: absolute;
+    width: 8px; height: 8px;
+    z-index: 2;
+  }
+  .entry-block::before { top: -1px; left: -1px; border-top: 2px solid var(--border); border-left: 2px solid var(--border); }
+  .entry-block::after  { bottom: -1px; right: -1px; border-bottom: 2px solid var(--border); border-right: 2px solid var(--border); }
+
+  .entry-block.parsing  { border-color: var(--amber); box-shadow: 0 0 10px var(--amber-glow); }
+  .entry-block.parsing::before, .entry-block.parsing::after { border-color: var(--amber-bright); }
+  .entry-block.ok       { border-color: var(--green); box-shadow: 0 0 10px var(--green-glow); }
+  .entry-block.ok::before, .entry-block.ok::after { border-color: var(--green-bright); }
+  .entry-block.warn     { border-color: var(--orange); box-shadow: 0 0 10px var(--orange-glow); }
+  .entry-block.warn::before, .entry-block.warn::after { border-color: var(--orange-bright); }
+  .entry-block.err      { border-color: var(--red); box-shadow: 0 0 10px var(--red-glow); }
+  .entry-block.err::before, .entry-block.err::after { border-color: var(--red-bright); }
+
+  .split-banner {
+    background: rgba(200, 133, 10, 0.08);
+    border-bottom: 1px solid var(--amber);
+    padding: 6px 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--amber-bright);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .split-banner.hidden { display: none; }
+
+  .btn-split {
+    background: var(--amber);
+    color: #000;
+    font-family: 'VT323', monospace;
+    font-size: 13px;
+    padding: 2px 10px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .entry-header {
+    background: rgba(200, 133, 10, 0.05);
+    border-bottom: 1px solid var(--border-dim);
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .entry-header-left { display: flex; align-items: center; gap: 12px; }
+
+  .entry-status { font-size: 13px; letter-spacing: 0.05em; }
+  .entry-status.ok      { color: var(--green-bright); }
+  .entry-status.warn    { color: var(--orange-bright); }
+  .entry-status.err     { color: var(--red-bright); }
+  .entry-status.parsing { color: var(--amber-bright); animation: blink 0.8s step-end infinite; }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--red-bright);
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    font-family: inherit;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .btn-remove:hover { opacity: 1; }
+
+  textarea {
+    width: 100%;
+    height: 130px;
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    border: none;
+    background: rgba(0,0,0,0.35);
+    color: var(--text);
+    resize: none;
+    outline: none;
+    display: block;
+    transition: background 0.2s;
+    letter-spacing: 0.03em;
+  }
+  textarea:focus { background: rgba(200, 133, 10, 0.04); color: var(--text-bright); }
+  textarea::placeholder { color: var(--text-dim); }
+
+  /* ── BUTTON ROW ── */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 7px 18px;
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .btn:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.25; cursor: not-allowed; transform: none; }
+
+  .btn-add {
+    background: transparent;
+    color: var(--amber);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 0 0 0 var(--amber-glow);
+  }
+  .btn-add:hover { border-color: var(--amber); background: var(--amber-glow); }
+
+  .btn-generate {
+    background: var(--amber);
+    color: #0a0600;
+    font-weight: 700;
+    box-shadow: 0 0 14px var(--amber-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .btn-generate:hover:not(:disabled) { box-shadow: 0 0 22px rgba(200,133,10,0.5); }
+
+  .btn-clear {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-dim);
+    margin-left: auto;
+  }
+  .btn-clear:hover { border-color: var(--red); color: var(--red-bright); }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #0a0600;
+    border-radius: 50%;
+    animation: spin 0.5s linear infinite;
+    display: none;
+    flex-shrink: 0;
+  }
+  .generating .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RIGHT PANEL ── */
+  .output-panel {
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    border-left: 2px solid var(--border);
+  }
+
+  .output-toolbar {
+    padding: 12px 24px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f5f3ee;
+    box-shadow: 0 1px 0 #e0d8c8;
+  }
+  .output-toolbar-left { display: flex; align-items: center; gap: 14px; }
+  .output-toolbar .panel-label { color: #888; font-family: 'Rajdhani', sans-serif; }
+  .output-toolbar .panel-label::before { color: #aaa; }
+  .booking-count {
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    color: #999;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .toolbar-btn-group { display: flex; gap: 8px; }
+
+  .btn-copy {
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    padding: 5px 16px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    color: #888;
+    transition: all 0.15s;
+  }
+  .btn-copy:hover { border-color: #555; color: #333; }
+  .btn-copy.copied { border-color: #4a9a30; color: #4a9a30; background: rgba(74,154,48,0.07); }
+
+  .btn-print {
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    padding: 5px 16px;
+    border: 1px solid #222;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #111;
+    color: #fff;
+    transition: all 0.15s;
+  }
+  .btn-print:hover { background: #333; }
+
+  .output-preview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 48px 36px;
+    background: #ffffff;
+  }
+  .output-preview::-webkit-scrollbar { width: 4px; }
+  .output-preview::-webkit-scrollbar-thumb { background: #ccc; }
+
+  /* ── PRINT SHEET ── */
+  #sheet {
+    max-width: 680px;
+    margin: 0 auto;
+    font-family: 'VT323', monospace;
+  }
+
+  .sheet-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    color: #111;
+    position: relative;
+  }
+  .sheet-title::before {
+    content: '— ';
+    opacity: 0.35;
+  }
+  .sheet-title::after {
+    content: ' —';
+    opacity: 0.35;
+  }
+
+  .date-group { margin-bottom: 40px; }
+
+  .date-heading {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    border-top: 2px solid #222;
+    border-bottom: 2px solid #222;
+    padding: 7px 0;
+    margin-bottom: 24px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: #111;
+    position: relative;
+  }
+  .date-heading::before { content: '◄ '; opacity: 0.4; }
+  .date-heading::after  { content: ' ►'; opacity: 0.4; }
+
+  .booking {
+    text-align: center;
+    font-size: 18px;
+    line-height: 2;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed #ccc;
+    color: #111;
+    letter-spacing: 0.04em;
+  }
+  .booking:last-child { border-bottom: none; }
+
+  .hl {
+    background: #FFE600;
+    color: #111;
+    padding: 0 3px;
+  }
+
+  .editable[contenteditable] {
+    cursor: text;
+    outline: none;
+    border-bottom: 1.5px dashed #aaa;
+    min-width: 20px;
+    display: inline-block;
+    transition: border-color 0.15s;
+  }
+  .editable[contenteditable]:hover { border-bottom-color: #333; }
+  .editable[contenteditable]:focus { border-bottom: 1.5px solid #000; }
+
+  .meal-select {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px dashed #aaa;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    color: #111;
+    -webkit-appearance: none;
+    appearance: none;
+    letter-spacing: 0.04em;
+  }
+  .yn-select {
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    background: #FFE600;
+    border: none;
+    border-bottom: 1.5px dashed #aaa;
+    cursor: pointer;
+    outline: none;
+    padding: 0 3px;
+    color: #111;
+    -webkit-appearance: none;
+    appearance: none;
+    letter-spacing: 0.04em;
+  }
+
+  select option { background: #fff; color: #111; }
+
+  .empty-state {
+    color: #bbb;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    text-align: center;
+    margin-top: 80px;
+    line-height: 2.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .empty-state strong { color: #555; }
+
+  /* ── HUD CORNER ── */
+  .hud-corner {
+    position: fixed;
+    bottom: 20px;
+    right: 24px;
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 3, 0, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: #0c0900;
+    border: 1px solid var(--amber);
+    padding: 36px;
+    max-width: 460px;
+    width: calc(100% - 48px);
+    box-shadow: 0 0 60px rgba(200, 133, 10, 0.2), 0 30px 80px rgba(0,0,0,0.8);
+    position: relative;
+  }
+  /* full corner brackets on modal */
+  .modal::before, .modal::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+  }
+  .modal::before { top: -1px; left: -1px; border-top: 3px solid var(--amber-bright); border-left: 3px solid var(--amber-bright); }
+  .modal::after  { bottom: -1px; right: -1px; border-bottom: 3px solid var(--amber-bright); border-right: 3px solid var(--amber-bright); }
+
+  .modal h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--amber-bright);
+    text-shadow: 0 0 10px var(--amber);
+  }
+  .modal p {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    letter-spacing: 0.03em;
+  }
+  .modal a { color: var(--amber); text-decoration: none; }
+  .modal a:hover { color: var(--amber-bright); }
+  .modal em { color: var(--text); font-style: normal; }
+
+  .modal input[type="text"] {
+    width: 100%;
+    font-family: 'VT323', monospace;
+    font-size: 15px;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    outline: none;
+    color: var(--text);
+    background: rgba(0,0,0,0.5);
+    letter-spacing: 0.04em;
+    transition: border-color 0.2s;
+  }
+  .modal input[type="text"]:focus { border-color: var(--amber); color: var(--text-bright); }
+  .modal-note {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    line-height: 1.7;
+    opacity: 0.7;
+  }
+  .modal-btn-row { display: flex; gap: 8px; margin-top: 22px; }
+
+  .btn-save-key {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 9px 20px;
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    background: var(--amber);
+    color: #0a0600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    box-shadow: 0 0 14px var(--amber-glow);
+    transition: box-shadow 0.2s;
+  }
+  .btn-save-key:hover { box-shadow: 0 0 22px rgba(200,133,10,0.5); }
+
+  .btn-test-key {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 9px 16px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-test-key:hover { border-color: var(--amber); color: var(--amber); }
+
+  .btn-skip-key {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 9px 16px;
+    border: 1px solid var(--border-dim);
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-skip-key:hover { color: var(--text); border-color: var(--border); }
+
+  /* ── CONFIRM DIALOG ── */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(4, 3, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(3px);
+  }
+  .confirm-overlay.hidden { display: none; }
+
+  .confirm-box {
+    background: #0c0900;
+    border: 1px solid var(--red);
+    padding: 28px;
+    max-width: 320px;
+    width: calc(100% - 48px);
+    box-shadow: 0 0 40px rgba(160,32,16,0.2), 0 20px 60px rgba(0,0,0,0.7);
+    position: relative;
+  }
+  .confirm-box::before, .confirm-box::after {
+    content: '';
+    position: absolute;
+    width: 10px; height: 10px;
+  }
+  .confirm-box::before { top: -1px; left: -1px; border-top: 2px solid var(--red-bright); border-left: 2px solid var(--red-bright); }
+  .confirm-box::after  { bottom: -1px; right: -1px; border-bottom: 2px solid var(--red-bright); border-right: 2px solid var(--red-bright); }
+
+  .confirm-box p {
+    font-size: 16px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .confirm-btn-row { display: flex; gap: 8px; }
+
+  .btn-confirm-yes {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 8px 16px;
+    border: 1px solid var(--red);
+    cursor: pointer;
+    flex: 1;
+    background: transparent;
+    color: var(--red-bright);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-confirm-yes:hover { background: var(--red-glow); }
+
+  .btn-confirm-no {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-dim);
+    cursor: pointer;
+    flex: 1;
+    background: transparent;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-confirm-no:hover { border-color: var(--border); color: var(--text); }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: white; color: black; }
+    body::before, body::after { display: none; }
+    header, .input-panel, .output-toolbar, .hud-corner { display: none !important; }
+    .workspace { display: block; height: auto; }
+    .output-panel { display: block; background: white; }
+    .output-preview { padding: 20px; overflow: visible; }
+    #sheet { max-width: 100%; }
+    .sheet-title, .date-heading, .booking { color: black; }
+    .editable[contenteditable] { border-bottom: 1px solid #999 !important; }
+    .meal-select, .yn-select {
+      border-bottom: none !important;
+      -webkit-appearance: none; appearance: none;
+      background: transparent !important; color: black;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- HOLONET ACCESS MODAL -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h2>// HoloNet Uplink Config</h2>
+    <p>
+      This terminal uplinks to a Republic Intelligence VI extraction core to decode group designations, timestamps, sectors, headcounts, and provisions from raw Mews telemetry — far more reliably than pattern-matching protocols.<br><br>
+      Your access key is stored only in <em>local memory</em> and relayed directly to the extraction endpoint. Telemetry data is purged within 7 cycles and never used for VI conditioning.
+    </p>
+    <input type="text" id="apiKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false" />
+    <p class="modal-note">
+      Obtain access credentials at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys.<br>
+      Extraction cost: negligible per booking. Regex fallback active if no key provided.
+    </p>
+    <div class="modal-btn-row">
+      <button class="btn-save-key" id="btnSaveKey">Initialize &amp; proceed</button>
+      <button class="btn-test-key" id="btnTestKey">Run diagnostics</button>
+      <button class="btn-skip-key" id="btnSkipKey">Bypass VI</button>
+    </div>
+    <div id="testResult" style="margin-top:12px;font-size:14px;line-height:1.7;display:none;padding:9px 12px;letter-spacing:0.03em;"></div>
+  </div>
+</div>
+
+<!-- CONFIRM CLEAR DIALOG -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>⚠ Wipe all transmissions and reset the terminal?</p>
+    <div class="confirm-btn-row">
+      <button class="btn-confirm-yes" id="btnConfirmYes">Confirm wipe</button>
+      <button class="btn-confirm-no" id="btnConfirmNo">Abort</button>
+    </div>
+  </div>
+</div>
+
+<!-- HUD decoration -->
+<div class="hud-corner">
+  <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="5" width="110" height="110" stroke="#c8850a" stroke-width="0.8"/>
+    <rect x="15" y="15" width="90" height="90" stroke="#c8850a" stroke-width="0.5"/>
+    <line x1="5" y1="60" x2="115" y2="60" stroke="#c8850a" stroke-width="0.5"/>
+    <line x1="60" y1="5" x2="60" y2="115" stroke="#c8850a" stroke-width="0.5"/>
+    <rect x="53" y="53" width="14" height="14" stroke="#c8850a" stroke-width="1"/>
+    <rect x="2" y="2" width="8" height="8" fill="#c8850a"/>
+    <rect x="110" y="2" width="8" height="8" fill="#c8850a"/>
+    <rect x="2" y="110" width="8" height="8" fill="#c8850a"/>
+    <rect x="110" y="110" width="8" height="8" fill="#c8850a"/>
+  </svg>
+</div>
+
+<header>
+  <div class="header-brand">
+    <!-- Republic crest mark -->
+    <div class="logo-mark">
+      <svg viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="16,2 30,10 30,26 16,34 2,26 2,10" stroke="#c8850a" stroke-width="1.5" fill="none"/>
+        <polygon points="16,7 25,12 25,24 16,29 7,24 7,12" stroke="#c8850a" stroke-width="0.8" fill="none" opacity="0.5"/>
+        <circle cx="16" cy="18" r="4" stroke="#c8850a" stroke-width="1.2" fill="none"/>
+        <line x1="16" y1="7" x2="16" y2="12" stroke="#c8850a" stroke-width="1"/>
+        <line x1="16" y1="24" x2="16" y2="29" stroke="#c8850a" stroke-width="1"/>
+        <line x1="7" y1="18" x2="12" y2="18" stroke="#c8850a" stroke-width="1"/>
+        <line x1="20" y1="18" x2="25" y2="18" stroke="#c8850a" stroke-width="1"/>
+      </svg>
+    </div>
+    <h1>PVL Meetings</h1>
+  </div>
+  <div class="header-right">
+    <div class="status-blips">
+      <div class="blip"></div>
+      <div class="blip"></div>
+      <div class="blip"></div>
+    </div>
+    <span class="tagline">Republic HoloNet · Mission Coordination · v2.1</span>
+    <button class="btn-api-key" id="btnApiKey">⚙ HoloNet Link</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- LEFT: Input -->
+  <div class="input-panel">
+    <div class="panel-label">Incoming Transmissions — one Mews datapad per entry</div>
+
+    <div class="entries-list" id="entriesList"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-add" id="btnAdd">+ New transmission</button>
+      <button class="btn btn-generate" id="btnGenerate">
+        <span class="spinner" id="spinner"></span>
+        <span id="generateLabel">Transmit ↗</span>
+      </button>
+      <button class="btn btn-clear" id="btnClear">Wipe all</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Output -->
+  <div class="output-panel">
+    <div class="output-toolbar">
+      <div class="output-toolbar-left">
+        <span class="panel-label">Mission Briefing</span>
+        <span class="booking-count" id="bookingCount"></span>
+      </div>
+      <div class="toolbar-btn-group">
+        <button class="btn-copy" id="btnCopy">Copy as text</button>
+        <button class="btn-print" id="btnPrint">Print / Export PDF</button>
+      </div>
+    </div>
+    <div class="output-preview">
+      <div id="sheet">
+        <div class="sheet-title">PVL Meetings</div>
+        <div class="empty-state">
+          Uplink Mews datapad transmissions on the left<br>
+          and click <strong>Transmit</strong> to compile the briefing.<br><br>
+          <span style="opacity:0.45;font-size:14px;letter-spacing:0.12em">CTRL + ENTER TO TRANSMIT · CTRL + SPACE FOR NEW ENTRY</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONSTANTS ──
+const MEALS = [
+  'Breakfast','Lunch','Dinner',
+  'Breakfast & Lunch','Breakfast & Dinner','Lunch & Dinner',
+  'Breakfast & Lunch & Dinner',
+  'Catering','None'
+];
+const LS_KEY   = 'pvl_entries_v2';
+const LS_APIKEY = 'pvl_api_key';
+
+// ── STATE ──
+let entryCount = 0;
+let currentBookings = [];
+let isGenerating = false;
+let confirmCallback = null;
+
+// ── RESILIENT STORAGE ──
+const _memStore = {};
+function _storageSet(key, val) {
+  _memStore[key] = val;
+  try { localStorage.setItem(key, val); return; } catch {}
+  try { sessionStorage.setItem(key, val); } catch {}
+}
+function _storageGet(key) {
+  if (_memStore[key]) return _memStore[key];
+  try { const v = localStorage.getItem(key); if (v) { _memStore[key] = v; return v; } } catch {}
+  try { const v = sessionStorage.getItem(key); if (v) { _memStore[key] = v; return v; } } catch {}
+  return null;
+}
+
+// ── API KEY HELPERS ──
+const getApiKey = () => _storageGet(LS_APIKEY) || '';
+const setApiKey = k => _storageSet(LS_APIKEY, k);
+
+function updateApiKeyBtn() {
+  const btn = document.getElementById('btnApiKey');
+  if (getApiKey()) {
+    btn.textContent = '✓ HoloNet Link';
+    btn.classList.add('has-key');
+  } else {
+    btn.textContent = '⚙ HoloNet Link';
+    btn.classList.remove('has-key');
+  }
+}
+
+// ── HOLONET MODAL ──
+function showApiModal() {
+  document.getElementById('apiKeyInput').value = getApiKey();
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function hideApiModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+}
+document.getElementById('btnApiKey').addEventListener('click', showApiModal);
+document.getElementById('btnSaveKey').addEventListener('click', () => {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (v) setApiKey(v);
+  hideApiModal();
+  updateApiKeyBtn();
+});
+document.getElementById('btnTestKey').addEventListener('click', async () => {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const resultEl = document.getElementById('testResult');
+  if (!key) {
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'rgba(200,133,10,0.08)';
+    resultEl.style.border = '1px solid #c8850a';
+    resultEl.style.color = '#f0b030';
+    resultEl.textContent = '⚠ Insert access key first.';
+    return;
+  }
+  resultEl.style.display = 'block';
+  resultEl.style.background = 'rgba(0,0,0,0.3)';
+  resultEl.style.border = '1px solid #3a2804';
+  resultEl.style.color = '#b87c10';
+  resultEl.textContent = 'Running diagnostics…';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Hi' }]
+      })
+    });
+    if (res.ok) {
+      resultEl.style.background = 'rgba(74,154,48,0.08)';
+      resultEl.style.border = '1px solid #4a9a30';
+      resultEl.style.color = '#70c840';
+      resultEl.textContent = '✓ HoloNet link established — VI core reachable.';
+    } else {
+      const err = await res.json().catch(() => ({}));
+      resultEl.style.background = 'rgba(160,32,16,0.08)';
+      resultEl.style.border = '1px solid #a02010';
+      resultEl.style.color = '#d03020';
+      resultEl.textContent = `✕ Relay error ${res.status}: ${err?.error?.message || res.statusText}`;
+    }
+  } catch(e) {
+    resultEl.style.background = 'rgba(160,32,16,0.08)';
+    resultEl.style.border = '1px solid #a02010';
+    resultEl.style.color = '#d03020';
+    resultEl.textContent = `✕ Network failure: ${e.message}`;
+  }
+});
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) hideApiModal();
+});
+
+// ── CONFIRM DIALOG ──
+function showConfirm(cb) {
+  confirmCallback = cb;
+  document.getElementById('confirmOverlay').classList.remove('hidden');
+}
+function hideConfirm() {
+  document.getElementById('confirmOverlay').classList.add('hidden');
+  confirmCallback = null;
+}
+document.getElementById('btnConfirmYes').addEventListener('click', () => {
+  hideConfirm();
+  if (confirmCallback) confirmCallback();
+});
+document.getElementById('btnConfirmNo').addEventListener('click', hideConfirm);
+
+// ── ENTRIES ──
+function addEntry(prefill = '') {
+  entryCount++;
+  const id = 'entry-' + entryCount;
+  const list = document.getElementById('entriesList');
+
+  const block = document.createElement('div');
+  block.className = 'entry-block';
+  block.id = id;
+  block.innerHTML = `
+    <div class="split-banner hidden" id="split-${id}">
+      <span>⚠ Multiple reservations detected in feed</span>
+      <button class="btn-split" onclick="splitEntry('${id}')">Split entries</button>
+    </div>
+    <div class="entry-header">
+      <div class="entry-header-left">
+        <span>Datapad ${entryCount}</span>
+        <span class="entry-status" id="status-${id}"></span>
+      </div>
+      <button class="btn-remove" onclick="removeEntry('${id}')" title="Remove">✕</button>
+    </div>
+    <textarea id="ta-${id}" placeholder="Paste raw Mews transmission data here…">${escHtml(prefill)}</textarea>
+  `;
+  list.appendChild(block);
+  list.scrollTop = list.scrollHeight;
+
+  const ta = block.querySelector('textarea');
+  ta.addEventListener('input', () => {
+    checkMultiBooking(id, ta.value);
+    persistEntries();
+  });
+
+  return id;
+}
+
+function removeEntry(id) {
+  document.getElementById(id)?.remove();
+  persistEntries();
+}
+
+function clearAll() {
+  document.getElementById('entriesList').innerHTML = '';
+  entryCount = 0;
+  currentBookings = [];
+  renderSheet([]);
+  persistEntries();
+}
+
+// ── MULTI-BOOKING DETECTION ──
+function checkMultiBooking(id, text) {
+  const count = (text.match(/\bArrival\b/gi) || []).length;
+  const banner = document.getElementById('split-' + id);
+  if (banner) banner.classList.toggle('hidden', count < 2);
+}
+
+function splitEntry(id) {
+  const ta = document.getElementById('ta-' + id);
+  if (!ta) return;
+  const raw = ta.value.trim();
+  const blocks = splitMewsBlocks(raw);
+  if (blocks.length < 2) return;
+
+  const el = document.getElementById(id);
+  el.remove();
+  blocks.forEach(b => { if (b.trim()) addEntry(b.trim()); });
+  persistEntries();
+}
+
+function splitMewsBlocks(raw) {
+  const lines = raw.split('\n');
+  const blocks = [];
+  let current = [];
+  let blanks = 0;
+
+  for (const line of lines) {
+    if (line.trim() === '') {
+      blanks++;
+      current.push(line);
+    } else {
+      if (blanks >= 2 && current.join('\n').trim()) {
+        blocks.push(current.join('\n').trim());
+        current = [];
+      }
+      blanks = 0;
+      current.push(line);
+    }
+  }
+  if (current.join('\n').trim()) blocks.push(current.join('\n').trim());
+  return blocks.length > 1 ? blocks : [raw];
+}
+
+// ── ENTRY PERSISTENCE ──
+function persistEntries() {
+  const blocks = document.querySelectorAll('#entriesList .entry-block textarea');
+  const data = [...blocks].map(ta => ta.value);
+  _storageSet(LS_KEY, JSON.stringify(data));
+}
+
+function restoreEntries() {
+  try {
+    const raw = _storageGet(LS_KEY);
+    const data = JSON.parse(raw || '[]');
+    if (data.length) { data.forEach(t => addEntry(t)); return true; }
+  } catch {}
+  return false;
+}
+
+// ── VI PARSING ──
+async function parseWithAI(raw) {
+  const key = getApiKey();
+  if (!key) return null;
+
+  const prompt = `Extract structured meeting data from this Mews hotel reservation export. Return ONLY a valid JSON object — no markdown, no explanation.
+
+Fields required:
+- "group": The group or company name (not a booking code or system ID). Look in the Note (General) section first.
+- "date": Arrival date in DD/MM format (e.g. "15/04"). Extract only day and month.
+- "time": Arrival time in HH:MM format (e.g. "09:00").
+- "room": The assigned meeting room or space name.
+- "mealLabel": Exactly one of: "Breakfast", "Lunch", "Dinner", "Breakfast & Lunch", "Breakfast & Dinner", "Lunch & Dinner", "Breakfast & Lunch & Dinner", "Catering", "None". Detect from Products or Note sections (Dutch: ontbijt=Breakfast, lunch=Lunch, diner/dinner=Dinner).
+- "pax": Number of attendees as a plain number string (e.g. "25"). Look for pax, personen, Adults count.
+
+Use "" for any field you cannot determine. Return only the JSON object.
+
+Raw Mews data:
+${raw}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1000,
+      system: 'You are a data extraction assistant. Extract fields from hotel PMS exports and return only valid JSON.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(`API ${res.status}: ${errBody?.error?.message || res.statusText}`);
+  }
+  const data = await res.json();
+  const text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+  return JSON.parse(text);
+}
+
+// ── FALLBACK (REGEX) PARSING ──
+function parseEntryFallback(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const text = lines.join('\n');
+
+  const noteBlockMatch = text.match(/Note\s*\(General\)[^\n]*\n([\s\S]*)/i);
+  const noteBlock = noteBlockMatch ? noteBlockMatch[1] : '';
+
+  const junkPatterns = [
+    /^[\d]+[\.:]/,/^-{2,}/,/^-\s/,/^->/,
+    /^(zaalopstelling|benodigdheden|programma|gemeentelijke|memo|nb\b|dieetwensen)/i,
+    /allerg/i,/geen vlees|no meat|no fish|shellfish|schelpdieren|noten|vegetari/i,
+    /^\*/,/^\(/,/gasten krijgen|welkomst|binnenkomst/i,
+    /volwassenen|kinderen|kinderkaart/i,/\d+\s*(personen|pax|persen)/i,
+    /^(lunch|dinner|diner|snack|ontbijt)\s+\d+/i,
+    /starten met|middag|ochtend|avond|om \d+[\.:]/i,
+    /[a-f0-9]{8}-[a-f0-9]{4}-/i,/proposales|mews operations/i,
+    /tickets\s+(ouwehands|dierenpark)/i,
+  ];
+  const isJunk = l => !l || l.length < 2 || junkPatterns.some(p => p.test(l));
+  const looksName = l => {
+    if (!l || l.length > 80 || isJunk(l)) return false;
+    if (/\b(krijgen|van het|bij|worden|volgt|inclusief|excl|boek)\b/i.test(l)) return false;
+    return /[A-ZÁÉÍÓÚÀÈÙÄËÏÖÜ]/.test(l);
+  };
+
+  let noteGroupName = null;
+  if (noteBlock) {
+    const noteLines = noteBlock.split('\n').map(l => l.trim());
+    let first = null;
+    for (const l of noteLines) {
+      if (looksName(l)) {
+        const parts = l.split(/\s+-\s+/);
+        let chosen = null;
+        for (const p of parts) {
+          const s = p.replace(/\s+\d+\s*(pax|personen|pers).*$/i,'').replace(/\s*->.*$/,'').trim();
+          if (/^(dinner|lunch|diner|ontbijt|breakfast|snack|buffet|var|memo)$/i.test(s)) continue;
+          if (s.length > 1 && looksName(s + ' x')) { chosen = s; break; }
+        }
+        if (!chosen) chosen = parts[0].replace(/\s+\d+\s*(pax|personen|pers).*$/i,'').replace(/\s*->.*$/,'').trim();
+        if (chosen?.length > 1) { first = chosen; break; }
+      }
+    }
+    let last = null;
+    for (let i = noteLines.length - 1; i >= 0; i--) {
+      if (looksName(noteLines[i])) { last = noteLines[i]; break; }
+    }
+    noteGroupName = (last && first) ? (last.split(' ').length <= 6 ? last : first) : (last || first);
+  }
+
+  let codeGroup = '';
+  const gn = text.match(/Group name\s*\n([^\n]+)/i);
+  if (gn) codeGroup = gn[1].replace(/-[A-Z0-9]{4,}$/,'').replace(/-\d+-\d+$/,'').trim();
+
+  const cm = text.match(/\*?\s*(?:__)?([A-Z][a-zA-Z.\-]+(?: [a-zA-Z]+)+ [A-Z][a-z]+)(?:__)?/)
+           || text.match(/\*?\s*(?:__)?([A-Z][a-z]+ [A-Z][a-z]+)(?:__)?/);
+  const companion = cm ? cm[1].trim() : null;
+  const afterAdults = text.match(/×\s*Adults\s*\n\s*\n?\s*([A-Z][a-zA-Z.\-]+(?: [a-zA-Z]+)*)/);
+  const guest = companion || (afterAdults ? afterAdults[1].trim() : null);
+
+  const group = (noteGroupName && !isJunk(noteGroupName) ? noteGroupName : null) || guest || codeGroup || '';
+
+  let date = '', time = '';
+  const arr = text.match(/Arrival\s*\n([\d\/]+)\s+([\d:]+)/i);
+  if (arr) {
+    const p = arr[1].split('/');
+    if (p.length >= 2) date = p[0] + '/' + p[1];
+    time = arr[2].slice(0,5);
+  }
+
+  let room = '';
+  const rm = text.match(/Assigned space\s*\n([^\n]+)/i);
+  if (rm) room = rm[1].trim();
+
+  let pax = '';
+  const px = text.match(/(\d+)\s*(personen|pax|persen)/i)
+           || text.match(/Adults\s*\n\s*(\d+)/i)
+           || text.match(/×\s*(\d+)\s*Adults/i);
+  if (px) pax = px[1];
+
+  const prodLines = text.match(/Products\s*\n([\s\S]*?)(?:\nPayment|\nOrigin|\nCreated|$)/i);
+  const search = ((prodLines ? prodLines[1] : '') + ' ' + noteBlock).toLowerCase();
+  const meals = [];
+  if (/breakfast|ontbijt/.test(search)) meals.push('Breakfast');
+  if (/lunch|lunchpakket|buffet/.test(search)) meals.push('Lunch');
+  if (/dinner|diner|3-gangen/.test(search)) meals.push('Dinner');
+  const mealLabel = meals.length ? meals.join(' & ') : 'Catering';
+
+  return { group, date, time, room, mealLabel, pax, yn: 'YES', _ai: false };
+}
+
+// ── TRANSMIT ──
+async function generate() {
+  if (isGenerating) return;
+  isGenerating = true;
+
+  const btnGen = document.getElementById('btnGenerate');
+  btnGen.classList.add('generating');
+  btnGen.disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('generateLabel').textContent = 'Transmitting…';
+
+  const blocks = document.querySelectorAll('#entriesList .entry-block');
+  currentBookings = [];
+
+  for (const block of blocks) {
+    const ta = block.querySelector('textarea');
+    const raw = ta?.value.trim() || '';
+    if (!raw) continue;
+
+    const id = block.id;
+    const statusEl = document.getElementById('status-' + id);
+    block.className = 'entry-block parsing';
+    if (statusEl) { statusEl.textContent = 'decoding…'; statusEl.className = 'entry-status parsing'; }
+
+    let parsed = null;
+    let usedAI = false;
+    let aiError = null;
+
+    try {
+      const ai = await parseWithAI(raw);
+      if (ai && typeof ai === 'object') {
+        parsed = {
+          group:     ai.group     || '',
+          date:      ai.date      || '',
+          time:      ai.time      || '',
+          room:      ai.room      || '',
+          mealLabel: ai.mealLabel || 'Catering',
+          pax:       ai.pax       || '',
+          yn:        'YES',
+          _ai:       true
+        };
+        usedAI = true;
+      }
+    } catch(e) {
+      aiError = e.message;
+      console.warn('VI parse failed, using fallback:', e.message);
+    }
+
+    if (!parsed) parsed = parseEntryFallback(raw);
+
+    currentBookings.push(parsed);
+
+    const missing = ['group','date','time','room'].filter(f => !parsed[f]);
+    block.classList.remove('parsing');
+
+    if (aiError) {
+      block.classList.add('warn');
+      if (statusEl) { statusEl.textContent = `⚠ VI failed: ${aiError}`; statusEl.className = 'entry-status warn'; }
+    } else if (missing.length === 0) {
+      block.classList.add('ok');
+      if (statusEl) { statusEl.textContent = usedAI ? '✓ VI' : '✓'; statusEl.className = 'entry-status ok'; }
+    } else if (missing.length <= 2) {
+      block.classList.add('warn');
+      if (statusEl) { statusEl.textContent = `⚠ missing: ${missing.join(', ')}`; statusEl.className = 'entry-status warn'; }
+    } else {
+      block.classList.add('err');
+      if (statusEl) { statusEl.textContent = '✕ check datapad'; statusEl.className = 'entry-status err'; }
+    }
+  }
+
+  renderSheet(currentBookings);
+  isGenerating = false;
+  btnGen.classList.remove('generating');
+  btnGen.disabled = false;
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('generateLabel').textContent = 'Transmit ↗';
+}
+
+// ── RENDER ──
+function renderSheet(bookings) {
+  const sheet = document.getElementById('sheet');
+  const countEl = document.getElementById('bookingCount');
+
+  if (!bookings.length) {
+    sheet.innerHTML = `
+      <div class="sheet-title">PVL Meetings</div>
+      <div class="empty-state">
+        Uplink Mews datapad transmissions on the left<br>
+        and click <strong>Transmit</strong> to compile the briefing.<br><br>
+        <span style="opacity:0.45;font-size:14px;letter-spacing:0.12em">CTRL + ENTER TO TRANSMIT · CTRL + SPACE FOR NEW ENTRY</span>
+      </div>`;
+    countEl.textContent = '';
+    return;
+  }
+
+  const byDate = {};
+  bookings.forEach((b, i) => {
+    const k = b.date || 'Unknown date';
+    (byDate[k] = byDate[k] || []).push({ ...b, _idx: i });
+  });
+  const sorted = Object.keys(byDate).sort((a, b) => {
+    const n = d => { const [dd,mm] = d.split('/'); return (+mm||99)*100 + (+dd||99); };
+    return n(a) - n(b);
+  });
+
+  countEl.textContent = `${bookings.length} booking${bookings.length !== 1 ? 's' : ''} · ${sorted.length} day${sorted.length !== 1 ? 's' : ''}`;
+
+  let html = '<div class="sheet-title">PVL Meetings</div>';
+  for (const date of sorted) {
+    html += `<div class="date-group"><div class="date-heading">${date}</div>`;
+    for (const b of byDate[date]) {
+      const opts = MEALS.map(m =>
+        `<option value="${m}"${m===b.mealLabel?' selected':''}>${m}</option>`
+      ).join('');
+      html += `<div class="booking" data-idx="${b._idx}">
+        GROUP: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="group" data-idx="${b._idx}">${esc(b.group)}</span>,<br>
+        ROOM: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="room" data-idx="${b._idx}">${esc(b.room)}</span>,
+        TIME: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="time" data-idx="${b._idx}">${esc(b.time)}</span>,
+        PAX: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="pax" data-idx="${b._idx}">${esc(b.pax)}</span>,<br>
+        <select class="meal-select" data-field="mealLabel" data-idx="${b._idx}">${opts}</select>:
+        <select class="yn-select" data-field="yn" data-idx="${b._idx}"><option>YES</option><option>NO</option></select>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  sheet.innerHTML = html;
+
+  sheet.querySelectorAll('.editable[contenteditable]').forEach(el => {
+    el.addEventListener('blur', () => {
+      currentBookings[+el.dataset.idx][el.dataset.field] = el.innerText.trim();
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+  });
+  sheet.querySelectorAll('.meal-select, .yn-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      currentBookings[+sel.dataset.idx][sel.dataset.field] = sel.value;
+    });
+  });
+}
+
+// ── COPY AS TEXT ──
+function copyAsText() {
+  if (!currentBookings.length) return;
+  const byDate = {};
+  currentBookings.forEach(b => {
+    const k = b.date || 'Unknown date';
+    (byDate[k] = byDate[k] || []).push(b);
+  });
+  const sorted = Object.keys(byDate).sort((a,b) => {
+    const n = d => { const [dd,mm] = d.split('/'); return (+mm||99)*100+(+dd||99); };
+    return n(a) - n(b);
+  });
+  let txt = 'PVL Meetings\n';
+  for (const date of sorted) {
+    txt += `\n── ${date} ──\n`;
+    for (const b of byDate[date]) {
+      txt += `GROUP: ${b.group||'—'}\n`;
+      txt += `ROOM: ${b.room||'—'}  |  TIME: ${b.time||'—'}  |  PAX: ${b.pax||'—'}\n`;
+      txt += `${b.mealLabel||'Catering'}: ${b.yn||'YES'}\n\n`;
+    }
+  }
+  navigator.clipboard.writeText(txt.trim()).then(() => {
+    const btn = document.getElementById('btnCopy');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Transmitted!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── HELPERS ──
+function esc(str) {
+  return (str||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter')  { e.preventDefault(); generate(); }
+  if (e.ctrlKey && e.key === ' ')      { e.preventDefault(); addEntry(); }
+});
+
+// ── WIRE UP BUTTONS ──
+document.getElementById('btnAdd').addEventListener('click', () => addEntry());
+document.getElementById('btnGenerate').addEventListener('click', generate);
+document.getElementById('btnClear').addEventListener('click', () => showConfirm(clearAll));
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+document.getElementById('btnCopy').addEventListener('click', copyAsText);
+
+// ── INIT ──
+updateApiKeyBtn();
+if (!restoreEntries()) addEntry();
+if (!getApiKey()) showApiModal();
+</script>
+</body>
+</html>

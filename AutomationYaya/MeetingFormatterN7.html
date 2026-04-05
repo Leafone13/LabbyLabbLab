@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PVL Meetings — EXTRANET TERMINAL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg:        #040c14;
+    --bg2:       #070f1a;
+    --panel:     rgba(8, 22, 38, 0.92);
+    --border:    #0d4f6e;
+    --cyan:      #00d4f5;
+    --cyan-dim:  #006d85;
+    --cyan-glow: rgba(0, 212, 245, 0.18);
+    --blue:      #1a6fa8;
+    --text:      #a8d8ea;
+    --text-dim:  #3a6878;
+    --text-bright:#e0f4ff;
+    --green:     #00e5b0;
+    --green-glow:rgba(0, 229, 176, 0.15);
+    --orange:    #ff9f1c;
+    --orange-glow:rgba(255, 159, 28, 0.15);
+    --red:       #ff3d2e;
+    --red-glow:  rgba(255, 61, 46, 0.15);
+    --amber:     #ffd600;
+    --amber-glow:rgba(255, 214, 0, 0.12);
+    --radius:    2px;
+    --radius-lg: 3px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 212, 245, 0.018) 2px,
+      rgba(0, 212, 245, 0.018) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── ANIMATED GRID BG ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,245,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,245,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body {
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: rgba(4, 12, 20, 0.97);
+    border-bottom: 1px solid var(--cyan);
+    padding: 0 32px;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 0 30px rgba(0, 212, 245, 0.12), 0 2px 0 var(--cyan);
+    height: 58px;
+  }
+
+  /* left accent bar */
+  header::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--cyan), var(--blue));
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-left: 16px;
+  }
+
+  /* N7 style logo mark */
+  .logo-mark {
+    width: 30px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 100%; height: 100%; }
+
+  header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--text-bright);
+    text-shadow: 0 0 14px var(--cyan), 0 0 28px rgba(0,212,245,0.3);
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .tagline {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* status blips */
+  .status-blips {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .blip {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+    animation: pulse-blip 2s ease-in-out infinite;
+  }
+  .blip:nth-child(2) { animation-delay: 0.4s; background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .blip:nth-child(3) { animation-delay: 0.8s; }
+  @keyframes pulse-blip {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.3; }
+  }
+
+  .btn-api-key {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--cyan-dim);
+    background: transparent;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .btn-api-key:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: var(--cyan-glow);
+    box-shadow: 0 0 10px rgba(0,212,245,0.2);
+  }
+  .btn-api-key.has-key {
+    border-color: var(--green);
+    color: var(--green);
+    box-shadow: 0 0 8px var(--green-glow);
+  }
+
+  /* ── LAYOUT ── */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    height: calc(100vh - 58px);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── LEFT PANEL ── */
+  .input-panel {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 14px;
+    overflow: hidden;
+  }
+
+  .panel-label {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-label::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1px;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+  }
+
+  .entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .entries-list::-webkit-scrollbar { width: 3px; }
+  .entries-list::-webkit-scrollbar-track { background: transparent; }
+  .entries-list::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 2px; }
+
+  /* ── ENTRY BLOCK ── */
+  .entry-block {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .entry-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .entry-block:focus-within::before { opacity: 1; }
+
+  .entry-block.parsing  { border-color: var(--amber); box-shadow: 0 0 12px var(--amber-glow); }
+  .entry-block.ok       { border-color: var(--green); box-shadow: 0 0 12px var(--green-glow); }
+  .entry-block.warn     { border-color: var(--orange); box-shadow: 0 0 12px var(--orange-glow); }
+  .entry-block.err      { border-color: var(--red); box-shadow: 0 0 12px var(--red-glow); }
+
+  .split-banner {
+    background: linear-gradient(90deg, rgba(255,214,0,0.12), transparent);
+    border-bottom: 1px solid var(--amber);
+    padding: 7px 12px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+  }
+  .split-banner.hidden { display: none; }
+
+  .btn-split {
+    background: var(--amber);
+    color: #000;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .entry-header {
+    background: rgba(0, 212, 245, 0.04);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .entry-header-left { display: flex; align-items: center; gap: 10px; }
+
+  .entry-status { font-size: 9px; letter-spacing: 0.05em; }
+  .entry-status.ok      { color: var(--green); text-shadow: 0 0 8px var(--green); }
+  .entry-status.warn    { color: var(--orange); text-shadow: 0 0 8px var(--orange); }
+  .entry-status.err     { color: var(--red); text-shadow: 0 0 8px var(--red); }
+  .entry-status.parsing { color: var(--amber); text-shadow: 0 0 8px var(--amber); }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--red);
+    font-size: 11px;
+    line-height: 1;
+    padding: 0 2px;
+    font-family: inherit;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+  }
+  .btn-remove:hover { opacity: 1; }
+
+  textarea {
+    width: 100%;
+    height: 130px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10.5px;
+    line-height: 1.7;
+    padding: 10px 12px;
+    border: none;
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text);
+    resize: none;
+    outline: none;
+    display: block;
+    transition: background 0.2s;
+  }
+  textarea:focus { background: rgba(0, 212, 245, 0.04); }
+  textarea::placeholder { color: var(--text-dim); }
+
+  /* ── BUTTON ROW ── */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .btn {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.4s;
+  }
+  .btn:hover::after { transform: translateX(100%); }
+  .btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+  .btn-add {
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid var(--cyan-dim);
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+  }
+  .btn-add:hover { border-color: var(--cyan); background: var(--cyan-glow); box-shadow: 0 0 12px rgba(0,212,245,0.2); }
+
+  .btn-generate {
+    background: var(--cyan);
+    color: #000;
+    font-weight: 700;
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+    box-shadow: 0 0 16px rgba(0, 212, 245, 0.35);
+  }
+  .btn-generate:hover:not(:disabled) { box-shadow: 0 0 24px rgba(0, 212, 245, 0.5); }
+
+  .btn-clear {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    margin-left: auto;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 11px; height: 11px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.5s linear infinite;
+    display: none;
+    flex-shrink: 0;
+  }
+  .generating .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RIGHT PANEL ── */
+  .output-panel {
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+  }
+
+  .output-toolbar {
+    padding: 14px 24px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f5f5f5;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  }
+  .output-toolbar-left { display: flex; align-items: center; gap: 14px; }
+  .output-toolbar .panel-label { color: #666; }
+  .output-toolbar .panel-label::before { background: #999; box-shadow: none; }
+  .booking-count {
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .toolbar-btn-group { display: flex; gap: 8px; }
+
+  .btn-copy {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    border: 1px solid #ccc;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    color: #888;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .btn-copy:hover { border-color: #333; color: #333; }
+  .btn-copy.copied { border-color: #00a878; color: #00a878; background: rgba(0,168,120,0.07); }
+
+  .btn-print {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    border: 1px solid #222;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #111;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    box-shadow: none;
+  }
+  .btn-print:hover { background: #333; }
+
+  .output-preview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 48px 36px;
+    background: #ffffff;
+  }
+  .output-preview::-webkit-scrollbar { width: 3px; }
+  .output-preview::-webkit-scrollbar-thumb { background: #ccc; }
+
+  /* ── PRINT SHEET ── */
+  #sheet {
+    max-width: 680px;
+    margin: 0 auto;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .sheet-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    color: #111;
+    text-shadow: none;
+    position: relative;
+  }
+  .sheet-title::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 2px;
+    background: #111;
+    margin: 12px auto 0;
+  }
+
+  .date-group { margin-bottom: 40px; }
+
+  .date-heading {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    border-top: 1px solid #222;
+    border-bottom: 1px solid #222;
+    padding: 8px 0;
+    margin-bottom: 24px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #111;
+  }
+  .date-heading::before,
+  .date-heading::after {
+    content: '◈';
+    margin: 0 12px;
+    opacity: 0.35;
+  }
+
+  .booking {
+    text-align: center;
+    font-size: 14px;
+    line-height: 2.2;
+    font-weight: 400;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px dashed #ccc;
+    color: #111;
+    letter-spacing: 0.04em;
+  }
+  .booking:last-child { border-bottom: none; }
+
+  .hl {
+    background: #FFE600;
+    color: #111;
+    text-shadow: none;
+    padding: 0 3px;
+  }
+
+  .editable[contenteditable] {
+    cursor: text;
+    outline: none;
+    border-bottom: 1.5px dashed #aaa;
+    min-width: 20px;
+    display: inline-block;
+    transition: border-color 0.2s;
+  }
+  .editable[contenteditable]:hover { border-bottom-color: #333; }
+  .editable[contenteditable]:focus {
+    border-bottom: 1.5px solid #000;
+    color: #000;
+    text-shadow: none;
+  }
+
+  .meal-select {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px dashed #aaa;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+    color: #111;
+    -webkit-appearance: none;
+    appearance: none;
+    letter-spacing: 0.04em;
+  }
+  .yn-select {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    background: #FFE600;
+    border: none;
+    border-bottom: 1.5px dashed #aaa;
+    cursor: pointer;
+    outline: none;
+    padding: 0 3px;
+    color: #111;
+    text-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+    letter-spacing: 0.04em;
+  }
+
+  /* select option styling for dark bg */
+  select option {
+    background: #fff;
+    color: #111;
+  }
+
+  .empty-state {
+    color: #aaa;
+    font-size: 11px;
+    text-align: center;
+    margin-top: 80px;
+    line-height: 2.4;
+    letter-spacing: 0.08em;
+  }
+  .empty-state strong { color: #333; }
+
+  /* HUD corner decoration */
+  .hud-corner {
+    position: fixed;
+    bottom: 20px;
+    right: 24px;
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 5, 12, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(6px);
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: #060f1c;
+    border: 1px solid var(--cyan);
+    border-radius: var(--radius-lg);
+    padding: 36px;
+    max-width: 460px;
+    width: calc(100% - 48px);
+    box-shadow: 0 0 60px rgba(0, 212, 245, 0.15), 0 30px 80px rgba(0,0,0,0.6);
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+    position: relative;
+  }
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    box-shadow: 0 0 10px var(--cyan);
+  }
+  .modal h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    text-shadow: 0 0 12px rgba(0,212,245,0.4);
+  }
+  .modal p {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.9;
+    margin-bottom: 20px;
+    letter-spacing: 0.03em;
+  }
+  .modal a { color: var(--cyan); text-decoration: none; }
+  .modal a:hover { text-shadow: 0 0 8px var(--cyan); }
+  .modal input[type="text"] {
+    width: 100%;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 11px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    outline: none;
+    color: var(--text);
+    background: rgba(0,0,0,0.4);
+    letter-spacing: 0.04em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .modal input[type="text"]:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0,212,245,0.15);
+    color: var(--text-bright);
+  }
+  .modal-note {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    line-height: 1.8;
+    opacity: 0.7;
+  }
+  .modal-btn-row { display: flex; gap: 8px; margin-top: 22px; }
+
+  .btn-save-key {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 11px 20px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    flex: 1;
+    background: var(--cyan);
+    color: #000;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    clip-path: polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px));
+    transition: box-shadow 0.2s;
+    box-shadow: 0 0 14px rgba(0,212,245,0.3);
+  }
+  .btn-save-key:hover { box-shadow: 0 0 22px rgba(0,212,245,0.5); }
+
+  .btn-test-key {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 11px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
+  .btn-test-key:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .btn-skip-key {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 11px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .btn-skip-key:hover { color: var(--text); border-color: var(--text-dim); }
+
+  /* ── CONFIRM DIALOG ── */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 5, 12, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  .confirm-overlay.hidden { display: none; }
+  .confirm-box {
+    background: #060f1c;
+    border: 1px solid var(--red);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 320px;
+    width: calc(100% - 48px);
+    box-shadow: 0 0 40px rgba(255, 61, 46, 0.15), 0 20px 60px rgba(0,0,0,0.5);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  .confirm-box p {
+    font-size: 12px;
+    margin-bottom: 20px;
+    line-height: 1.7;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+  .confirm-btn-row { display: flex; gap: 8px; }
+
+  .btn-confirm-yes {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 10px 16px;
+    border: 1px solid var(--red);
+    border-radius: var(--radius);
+    cursor: pointer;
+    flex: 1;
+    background: transparent;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .btn-confirm-yes:hover { background: var(--red-glow); box-shadow: 0 0 10px rgba(255,61,46,0.2); }
+
+  .btn-confirm-no {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    flex: 1;
+    background: transparent;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .btn-confirm-no:hover { border-color: var(--text-dim); color: var(--text); }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: white; color: black; }
+    body::before, body::after { display: none; }
+    header, .input-panel, .output-toolbar, .hud-corner { display: none !important; }
+    .workspace { display: block; height: auto; }
+    .output-panel { display: block; background: white; }
+    .output-preview { padding: 20px; overflow: visible; }
+    #sheet { max-width: 100%; }
+    .sheet-title { color: black; text-shadow: none; font-size: 28px; }
+    .date-heading { color: black; border-color: black; }
+    .booking { color: black; border-bottom-color: #ccc; }
+    .hl { color: black; text-shadow: none; }
+    .editable[contenteditable] { border-bottom: 1px solid #999 !important; }
+    .meal-select, .yn-select {
+      border-bottom: none !important;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent !important;
+      color: black;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h2>// Neural Link Config</h2>
+    <p>
+      This terminal uplinks to a Quantum VI extraction core to decode group designations, timestamps, sectors, headcounts, and provisions from raw Mews telemetry — far more reliably than pattern-matching protocols.<br><br>
+      Your access key is stored only in <em>local memory</em> and relayed directly to the extraction endpoint. Telemetry data is purged within 7 cycles and never used for VI conditioning.
+    </p>
+    <input type="text" id="apiKeyInput" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false" />
+    <p class="modal-note">
+      Obtain access credentials at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys.<br>
+      Extraction cost: negligible per booking. Regex fallback active if no key provided.
+    </p>
+    <div class="modal-btn-row">
+      <button class="btn-save-key" id="btnSaveKey">Initialize &amp; proceed</button>
+      <button class="btn-test-key" id="btnTestKey">Run diagnostics</button>
+      <button class="btn-skip-key" id="btnSkipKey">Bypass AI</button>
+    </div>
+    <div id="testResult" style="margin-top:12px;font-size:10px;line-height:1.7;display:none;padding:9px 12px;border-radius:2px;letter-spacing:0.03em;"></div>
+  </div>
+</div>
+
+<!-- CONFIRM CLEAR DIALOG -->
+<div class="confirm-overlay hidden" id="confirmOverlay">
+  <div class="confirm-box">
+    <p>⚠ Purge all active entries and reset the terminal?</p>
+    <div class="confirm-btn-row">
+      <button class="btn-confirm-yes" id="btnConfirmYes">Confirm purge</button>
+      <button class="btn-confirm-no" id="btnConfirmNo">Abort</button>
+    </div>
+  </div>
+</div>
+
+<!-- HUD decoration -->
+<div class="hud-corner">
+  <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="60" cy="60" r="55" stroke="#00d4f5" stroke-width="0.5"/>
+    <circle cx="60" cy="60" r="40" stroke="#00d4f5" stroke-width="0.5"/>
+    <circle cx="60" cy="60" r="25" stroke="#00d4f5" stroke-width="0.5"/>
+    <line x1="5" y1="60" x2="115" y2="60" stroke="#00d4f5" stroke-width="0.5"/>
+    <line x1="60" y1="5" x2="60" y2="115" stroke="#00d4f5" stroke-width="0.5"/>
+    <polygon points="60,32 65,42 55,42" fill="#00d4f5" opacity="0.6"/>
+    <polygon points="60,88 65,78 55,78" fill="#00d4f5" opacity="0.6"/>
+  </svg>
+</div>
+
+<header>
+  <div class="header-brand">
+    <!-- N7-style logo mark -->
+    <div class="logo-mark">
+      <svg viewBox="0 0 30 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="28" height="34" rx="1" stroke="#00d4f5" stroke-width="1.2"/>
+        <line x1="1" y1="22" x2="29" y2="22" stroke="#00d4f5" stroke-width="1"/>
+        <rect x="1" y="22" width="28" height="13" rx="1" fill="#cc2200" opacity="0.85"/>
+        <text x="3" y="15" fill="#00d4f5" font-family="'Orbitron',sans-serif" font-weight="900" font-size="11" letter-spacing="1">N7</text>
+        <text x="7" y="32" fill="white" font-family="'Share Tech Mono',monospace" font-size="7" opacity="0.9">PVL</text>
+      </svg>
+    </div>
+    <h1>PVL Meetings</h1>
+  </div>
+  <div class="header-right">
+    <div class="status-blips">
+      <div class="blip"></div>
+      <div class="blip"></div>
+      <div class="blip"></div>
+    </div>
+    <span class="tagline">Mews Extranet · Tactical Formatter · v2.1</span>
+    <button class="btn-api-key" id="btnApiKey">⚙ Neural Link</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- LEFT: Input -->
+  <div class="input-panel">
+    <div class="panel-label">Reservation Telemetry — one Mews block per entry</div>
+
+    <div class="entries-list" id="entriesList"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-add" id="btnAdd">+ Uplink entry</button>
+      <button class="btn btn-generate" id="btnGenerate">
+        <span class="spinner" id="spinner"></span>
+        <span id="generateLabel">Execute ↗</span>
+      </button>
+      <button class="btn btn-clear" id="btnClear">Purge all</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Output -->
+  <div class="output-panel">
+    <div class="output-toolbar">
+      <div class="output-toolbar-left">
+        <span class="panel-label">Tactical Overview</span>
+        <span class="booking-count" id="bookingCount"></span>
+      </div>
+      <div class="toolbar-btn-group">
+        <button class="btn-copy" id="btnCopy">Copy as text</button>
+        <button class="btn-print" id="btnPrint">Print / Export PDF</button>
+      </div>
+    </div>
+    <div class="output-preview">
+      <div id="sheet">
+        <div class="sheet-title">PVL Meetings</div>
+        <div class="empty-state">
+          Uplink Mews reservation data on the left<br>
+          and click <strong>Execute</strong> to compile the briefing.<br><br>
+          <span style="opacity:0.5;font-size:10px;letter-spacing:0.1em">⊞ + ENTER TO EXECUTE · ⊞ + SPACE FOR NEW ENTRY</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONSTANTS ──
+const MEALS = [
+  'Breakfast','Lunch','Dinner',
+  'Breakfast & Lunch','Breakfast & Dinner','Lunch & Dinner',
+  'Breakfast & Lunch & Dinner',
+  'Catering','None'
+];
+const LS_KEY   = 'pvl_entries_v2';
+const LS_APIKEY = 'pvl_api_key';
+
+// ── STATE ──
+let entryCount = 0;
+let currentBookings = [];
+let isGenerating = false;
+let confirmCallback = null;
+
+// ── RESILIENT STORAGE (localStorage → sessionStorage → memory fallback) ──
+const _memStore = {};
+function _storageSet(key, val) {
+  _memStore[key] = val;
+  try { localStorage.setItem(key, val); return; } catch {}
+  try { sessionStorage.setItem(key, val); } catch {}
+}
+function _storageGet(key) {
+  if (_memStore[key]) return _memStore[key];
+  try { const v = localStorage.getItem(key); if (v) { _memStore[key] = v; return v; } } catch {}
+  try { const v = sessionStorage.getItem(key); if (v) { _memStore[key] = v; return v; } } catch {}
+  return null;
+}
+
+// ── API KEY HELPERS ──
+const getApiKey = () => _storageGet(LS_APIKEY) || '';
+const setApiKey = k => _storageSet(LS_APIKEY, k);
+
+function updateApiKeyBtn() {
+  const btn = document.getElementById('btnApiKey');
+  if (getApiKey()) {
+    btn.textContent = '✓ Neural Link';
+    btn.classList.add('has-key');
+  } else {
+    btn.textContent = '⚙ Neural Link';
+    btn.classList.remove('has-key');
+  }
+}
+
+// ── API KEY MODAL ──
+function showApiModal() {
+  document.getElementById('apiKeyInput').value = getApiKey();
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+function hideApiModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+}
+document.getElementById('btnApiKey').addEventListener('click', showApiModal);
+document.getElementById('btnSaveKey').addEventListener('click', () => {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (v) setApiKey(v);
+  hideApiModal();
+  updateApiKeyBtn();
+});
+document.getElementById('btnTestKey').addEventListener('click', async () => {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const resultEl = document.getElementById('testResult');
+  if (!key) {
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'rgba(255,214,0,0.08)';
+    resultEl.style.border = '1px solid #ffd600';
+    resultEl.style.color = '#ffd600';
+    resultEl.textContent = '⚠ Insert access key first.';
+    return;
+  }
+  resultEl.style.display = 'block';
+  resultEl.style.background = 'rgba(0,212,245,0.05)';
+  resultEl.style.border = '1px solid #0d4f6e';
+  resultEl.style.color = '#a8d8ea';
+  resultEl.textContent = 'Running diagnostics…';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Hi' }]
+      })
+    });
+    if (res.ok) {
+      resultEl.style.background = 'rgba(0,229,176,0.08)';
+      resultEl.style.border = '1px solid #00e5b0';
+      resultEl.style.color = '#00e5b0';
+      resultEl.textContent = '✓ Neural link established — VI core reachable.';
+    } else {
+      const err = await res.json().catch(() => ({}));
+      resultEl.style.background = 'rgba(255,61,46,0.08)';
+      resultEl.style.border = '1px solid #ff3d2e';
+      resultEl.style.color = '#ff3d2e';
+      resultEl.textContent = `✕ Relay error ${res.status}: ${err?.error?.message || res.statusText}`;
+    }
+  } catch(e) {
+    resultEl.style.background = 'rgba(255,61,46,0.08)';
+    resultEl.style.border = '1px solid #ff3d2e';
+    resultEl.style.color = '#ff3d2e';
+    resultEl.textContent = `✕ Network failure: ${e.message}`;
+  }
+});
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) hideApiModal();
+});
+
+// ── CONFIRM DIALOG ──
+function showConfirm(cb) {
+  confirmCallback = cb;
+  document.getElementById('confirmOverlay').classList.remove('hidden');
+}
+function hideConfirm() {
+  document.getElementById('confirmOverlay').classList.add('hidden');
+  confirmCallback = null;
+}
+document.getElementById('btnConfirmYes').addEventListener('click', () => {
+  hideConfirm();
+  if (confirmCallback) confirmCallback();
+});
+document.getElementById('btnConfirmNo').addEventListener('click', hideConfirm);
+
+// ── ENTRIES ──
+function addEntry(prefill = '') {
+  entryCount++;
+  const id = 'entry-' + entryCount;
+  const list = document.getElementById('entriesList');
+
+  const block = document.createElement('div');
+  block.className = 'entry-block';
+  block.id = id;
+  block.innerHTML = `
+    <div class="split-banner hidden" id="split-${id}">
+      <span>⚠ Multiple reservations detected in feed</span>
+      <button class="btn-split" onclick="splitEntry('${id}')">Split entries</button>
+    </div>
+    <div class="entry-header">
+      <div class="entry-header-left">
+        <span>Entry ${entryCount}</span>
+        <span class="entry-status" id="status-${id}"></span>
+      </div>
+      <button class="btn-remove" onclick="removeEntry('${id}')" title="Remove">✕</button>
+    </div>
+    <textarea id="ta-${id}" placeholder="Paste raw Mews reservation telemetry here…">${escHtml(prefill)}</textarea>
+  `;
+  list.appendChild(block);
+  list.scrollTop = list.scrollHeight;
+
+  const ta = block.querySelector('textarea');
+  ta.addEventListener('input', () => {
+    checkMultiBooking(id, ta.value);
+    persistEntries();
+  });
+
+  return id;
+}
+
+function removeEntry(id) {
+  document.getElementById(id)?.remove();
+  persistEntries();
+}
+
+function clearAll() {
+  document.getElementById('entriesList').innerHTML = '';
+  entryCount = 0;
+  currentBookings = [];
+  renderSheet([]);
+  persistEntries();
+}
+
+// ── MULTI-BOOKING DETECTION ──
+function checkMultiBooking(id, text) {
+  const count = (text.match(/\bArrival\b/gi) || []).length;
+  const banner = document.getElementById('split-' + id);
+  if (banner) banner.classList.toggle('hidden', count < 2);
+}
+
+function splitEntry(id) {
+  const ta = document.getElementById('ta-' + id);
+  if (!ta) return;
+  const raw = ta.value.trim();
+  const blocks = splitMewsBlocks(raw);
+  if (blocks.length < 2) return;
+
+  const el = document.getElementById(id);
+  el.remove();
+  blocks.forEach(b => { if (b.trim()) addEntry(b.trim()); });
+  persistEntries();
+}
+
+function splitMewsBlocks(raw) {
+  const lines = raw.split('\n');
+  const blocks = [];
+  let current = [];
+  let blanks = 0;
+
+  for (const line of lines) {
+    if (line.trim() === '') {
+      blanks++;
+      current.push(line);
+    } else {
+      if (blanks >= 2 && current.join('\n').trim()) {
+        blocks.push(current.join('\n').trim());
+        current = [];
+      }
+      blanks = 0;
+      current.push(line);
+    }
+  }
+  if (current.join('\n').trim()) blocks.push(current.join('\n').trim());
+  return blocks.length > 1 ? blocks : [raw];
+}
+
+// ── ENTRY PERSISTENCE ──
+function persistEntries() {
+  const blocks = document.querySelectorAll('#entriesList .entry-block textarea');
+  const data = [...blocks].map(ta => ta.value);
+  _storageSet(LS_KEY, JSON.stringify(data));
+}
+
+function restoreEntries() {
+  try {
+    const raw = _storageGet(LS_KEY);
+    const data = JSON.parse(raw || '[]');
+    if (data.length) { data.forEach(t => addEntry(t)); return true; }
+  } catch {}
+  return false;
+}
+
+// ── AI PARSING ──
+async function parseWithAI(raw) {
+  const key = getApiKey();
+  if (!key) return null;
+
+  const prompt = `Extract structured meeting data from this Mews hotel reservation export. Return ONLY a valid JSON object — no markdown, no explanation.
+
+Fields required:
+- "group": The group or company name (not a booking code or system ID). Look in the Note (General) section first.
+- "date": Arrival date in DD/MM format (e.g. "15/04"). Extract only day and month.
+- "time": Arrival time in HH:MM format (e.g. "09:00").
+- "room": The assigned meeting room or space name.
+- "mealLabel": Exactly one of: "Breakfast", "Lunch", "Dinner", "Breakfast & Lunch", "Breakfast & Dinner", "Lunch & Dinner", "Breakfast & Lunch & Dinner", "Catering", "None". Detect from Products or Note sections (Dutch: ontbijt=Breakfast, lunch=Lunch, diner/dinner=Dinner).
+- "pax": Number of attendees as a plain number string (e.g. "25"). Look for pax, personen, Adults count.
+
+Use "" for any field you cannot determine. Return only the JSON object.
+
+Raw Mews data:
+${raw}`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1000,
+      system: 'You are a data extraction assistant. Extract fields from hotel PMS exports and return only valid JSON.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(`API ${res.status}: ${errBody?.error?.message || res.statusText}`);
+  }
+  const data = await res.json();
+  const text = (data.content?.[0]?.text || '').replace(/```json|```/g, '').trim();
+  return JSON.parse(text);
+}
+
+// ── FALLBACK (REGEX) PARSING ──
+function parseEntryFallback(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const text = lines.join('\n');
+
+  const noteBlockMatch = text.match(/Note\s*\(General\)[^\n]*\n([\s\S]*)/i);
+  const noteBlock = noteBlockMatch ? noteBlockMatch[1] : '';
+
+  const junkPatterns = [
+    /^[\d]+[\.:]/,/^-{2,}/,/^-\s/,/^->/,
+    /^(zaalopstelling|benodigdheden|programma|gemeentelijke|memo|nb\b|dieetwensen)/i,
+    /allerg/i,/geen vlees|no meat|no fish|shellfish|schelpdieren|noten|vegetari/i,
+    /^\*/,/^\(/,/gasten krijgen|welkomst|binnenkomst/i,
+    /volwassenen|kinderen|kinderkaart/i,/\d+\s*(personen|pax|persen)/i,
+    /^(lunch|dinner|diner|snack|ontbijt)\s+\d+/i,
+    /starten met|middag|ochtend|avond|om \d+[\.:]/i,
+    /[a-f0-9]{8}-[a-f0-9]{4}-/i,/proposales|mews operations/i,
+    /tickets\s+(ouwehands|dierenpark)/i,
+  ];
+  const isJunk = l => !l || l.length < 2 || junkPatterns.some(p => p.test(l));
+  const looksName = l => {
+    if (!l || l.length > 80 || isJunk(l)) return false;
+    if (/\b(krijgen|van het|bij|worden|volgt|inclusief|excl|boek)\b/i.test(l)) return false;
+    return /[A-ZÁÉÍÓÚÀÈÙÄËÏÖÜ]/.test(l);
+  };
+
+  let noteGroupName = null;
+  if (noteBlock) {
+    const noteLines = noteBlock.split('\n').map(l => l.trim());
+    let first = null;
+    for (const l of noteLines) {
+      if (looksName(l)) {
+        const parts = l.split(/\s+-\s+/);
+        let chosen = null;
+        for (const p of parts) {
+          const s = p.replace(/\s+\d+\s*(pax|personen|pers).*$/i,'').replace(/\s*->.*$/,'').trim();
+          if (/^(dinner|lunch|diner|ontbijt|breakfast|snack|buffet|var|memo)$/i.test(s)) continue;
+          if (s.length > 1 && looksName(s + ' x')) { chosen = s; break; }
+        }
+        if (!chosen) chosen = parts[0].replace(/\s+\d+\s*(pax|personen|pers).*$/i,'').replace(/\s*->.*$/,'').trim();
+        if (chosen?.length > 1) { first = chosen; break; }
+      }
+    }
+    let last = null;
+    for (let i = noteLines.length - 1; i >= 0; i--) {
+      if (looksName(noteLines[i])) { last = noteLines[i]; break; }
+    }
+    noteGroupName = (last && first) ? (last.split(' ').length <= 6 ? last : first) : (last || first);
+  }
+
+  let codeGroup = '';
+  const gn = text.match(/Group name\s*\n([^\n]+)/i);
+  if (gn) codeGroup = gn[1].replace(/-[A-Z0-9]{4,}$/,'').replace(/-\d+-\d+$/,'').trim();
+
+  const cm = text.match(/\*?\s*(?:__)?([A-Z][a-zA-Z.\-]+(?: [a-zA-Z]+)+ [A-Z][a-z]+)(?:__)?/)
+           || text.match(/\*?\s*(?:__)?([A-Z][a-z]+ [A-Z][a-z]+)(?:__)?/);
+  const companion = cm ? cm[1].trim() : null;
+  const afterAdults = text.match(/×\s*Adults\s*\n\s*\n?\s*([A-Z][a-zA-Z.\-]+(?: [a-zA-Z]+)*)/);
+  const guest = companion || (afterAdults ? afterAdults[1].trim() : null);
+
+  const group = (noteGroupName && !isJunk(noteGroupName) ? noteGroupName : null) || guest || codeGroup || '';
+
+  let date = '', time = '';
+  const arr = text.match(/Arrival\s*\n([\d\/]+)\s+([\d:]+)/i);
+  if (arr) {
+    const p = arr[1].split('/');
+    if (p.length >= 2) date = p[0] + '/' + p[1];
+    time = arr[2].slice(0,5);
+  }
+
+  let room = '';
+  const rm = text.match(/Assigned space\s*\n([^\n]+)/i);
+  if (rm) room = rm[1].trim();
+
+  let pax = '';
+  const px = text.match(/(\d+)\s*(personen|pax|persen)/i)
+           || text.match(/Adults\s*\n\s*(\d+)/i)
+           || text.match(/×\s*(\d+)\s*Adults/i);
+  if (px) pax = px[1];
+
+  const prodLines = text.match(/Products\s*\n([\s\S]*?)(?:\nPayment|\nOrigin|\nCreated|$)/i);
+  const search = ((prodLines ? prodLines[1] : '') + ' ' + noteBlock).toLowerCase();
+  const meals = [];
+  if (/breakfast|ontbijt/.test(search)) meals.push('Breakfast');
+  if (/lunch|lunchpakket|buffet/.test(search)) meals.push('Lunch');
+  if (/dinner|diner|3-gangen/.test(search)) meals.push('Dinner');
+  const mealLabel = meals.length ? meals.join(' & ') : 'Catering';
+
+  return { group, date, time, room, mealLabel, pax, yn: 'YES', _ai: false };
+}
+
+// ── GENERATE ──
+async function generate() {
+  if (isGenerating) return;
+  isGenerating = true;
+
+  const btnGen = document.getElementById('btnGenerate');
+  btnGen.classList.add('generating');
+  btnGen.disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('generateLabel').textContent = 'Parsing…';
+
+  const blocks = document.querySelectorAll('#entriesList .entry-block');
+  currentBookings = [];
+
+  for (const block of blocks) {
+    const ta = block.querySelector('textarea');
+    const raw = ta?.value.trim() || '';
+    if (!raw) continue;
+
+    const id = block.id;
+    const statusEl = document.getElementById('status-' + id);
+    block.className = 'entry-block parsing';
+    if (statusEl) { statusEl.textContent = 'parsing…'; statusEl.className = 'entry-status parsing'; }
+
+    let parsed = null;
+    let usedAI = false;
+    let aiError = null;
+
+    try {
+      const ai = await parseWithAI(raw);
+      if (ai && typeof ai === 'object') {
+        parsed = {
+          group:     ai.group     || '',
+          date:      ai.date      || '',
+          time:      ai.time      || '',
+          room:      ai.room      || '',
+          mealLabel: ai.mealLabel || 'Catering',
+          pax:       ai.pax       || '',
+          yn:        'YES',
+          _ai:       true
+        };
+        usedAI = true;
+      }
+    } catch(e) {
+      aiError = e.message;
+      console.warn('VI parse failed, using fallback:', e.message);
+    }
+
+    if (!parsed) parsed = parseEntryFallback(raw);
+
+    currentBookings.push(parsed);
+
+    const missing = ['group','date','time','room'].filter(f => !parsed[f]);
+    block.classList.remove('parsing');
+
+    if (aiError) {
+      block.classList.add('warn');
+      if (statusEl) { statusEl.textContent = `⚠ VI failed: ${aiError}`; statusEl.className = 'entry-status warn'; }
+    } else if (missing.length === 0) {
+      block.classList.add('ok');
+      if (statusEl) { statusEl.textContent = usedAI ? '✓ VI' : '✓'; statusEl.className = 'entry-status ok'; }
+    } else if (missing.length <= 2) {
+      block.classList.add('warn');
+      if (statusEl) { statusEl.textContent = `⚠ missing: ${missing.join(', ')}`; statusEl.className = 'entry-status warn'; }
+    } else {
+      block.classList.add('err');
+      if (statusEl) { statusEl.textContent = '✕ check entry'; statusEl.className = 'entry-status err'; }
+    }
+  }
+
+  renderSheet(currentBookings);
+  isGenerating = false;
+  btnGen.classList.remove('generating');
+  btnGen.disabled = false;
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('generateLabel').textContent = 'Execute ↗';
+}
+
+// ── RENDER ──
+function renderSheet(bookings) {
+  const sheet = document.getElementById('sheet');
+  const countEl = document.getElementById('bookingCount');
+
+  if (!bookings.length) {
+    sheet.innerHTML = `
+      <div class="sheet-title">PVL Meetings</div>
+      <div class="empty-state">
+        Uplink Mews reservation data on the left<br>
+        and click <strong>Execute</strong> to compile the briefing.<br><br>
+        <span style="opacity:0.5;font-size:10px;letter-spacing:0.1em">⊞ + ENTER TO EXECUTE · ⊞ + SPACE FOR NEW ENTRY</span>
+      </div>`;
+    countEl.textContent = '';
+    return;
+  }
+
+  const byDate = {};
+  bookings.forEach((b, i) => {
+    const k = b.date || 'Unknown date';
+    (byDate[k] = byDate[k] || []).push({ ...b, _idx: i });
+  });
+  const sorted = Object.keys(byDate).sort((a, b) => {
+    const n = d => { const [dd,mm] = d.split('/'); return (+mm||99)*100 + (+dd||99); };
+    return n(a) - n(b);
+  });
+
+  countEl.textContent = `${bookings.length} booking${bookings.length !== 1 ? 's' : ''} · ${sorted.length} day${sorted.length !== 1 ? 's' : ''}`;
+
+  let html = '<div class="sheet-title">PVL Meetings</div>';
+  for (const date of sorted) {
+    html += `<div class="date-group"><div class="date-heading">${date}</div>`;
+    for (const b of byDate[date]) {
+      const opts = MEALS.map(m =>
+        `<option value="${m}"${m===b.mealLabel?' selected':''}>${m}</option>`
+      ).join('');
+      html += `<div class="booking" data-idx="${b._idx}">
+        GROUP: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="group" data-idx="${b._idx}">${esc(b.group)}</span>,<br>
+        ROOM: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="room" data-idx="${b._idx}">${esc(b.room)}</span>,
+        TIME: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="time" data-idx="${b._idx}">${esc(b.time)}</span>,
+        PAX: <span class="hl editable" contenteditable="true" spellcheck="false" data-field="pax" data-idx="${b._idx}">${esc(b.pax)}</span>,<br>
+        <select class="meal-select" data-field="mealLabel" data-idx="${b._idx}">${opts}</select>:
+        <select class="yn-select" data-field="yn" data-idx="${b._idx}"><option>YES</option><option>NO</option></select>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  sheet.innerHTML = html;
+
+  sheet.querySelectorAll('.editable[contenteditable]').forEach(el => {
+    el.addEventListener('blur', () => {
+      currentBookings[+el.dataset.idx][el.dataset.field] = el.innerText.trim();
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+  });
+  sheet.querySelectorAll('.meal-select, .yn-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      currentBookings[+sel.dataset.idx][sel.dataset.field] = sel.value;
+    });
+  });
+}
+
+// ── COPY AS TEXT ──
+function copyAsText() {
+  if (!currentBookings.length) return;
+  const byDate = {};
+  currentBookings.forEach(b => {
+    const k = b.date || 'Unknown date';
+    (byDate[k] = byDate[k] || []).push(b);
+  });
+  const sorted = Object.keys(byDate).sort((a,b) => {
+    const n = d => { const [dd,mm] = d.split('/'); return (+mm||99)*100+(+dd||99); };
+    return n(a) - n(b);
+  });
+  let txt = 'PVL Meetings\n';
+  for (const date of sorted) {
+    txt += `\n── ${date} ──\n`;
+    for (const b of byDate[date]) {
+      txt += `GROUP: ${b.group||'—'}\n`;
+      txt += `ROOM: ${b.room||'—'}  |  TIME: ${b.time||'—'}  |  PAX: ${b.pax||'—'}\n`;
+      txt += `${b.mealLabel||'Catering'}: ${b.yn||'YES'}\n\n`;
+    }
+  }
+  navigator.clipboard.writeText(txt.trim()).then(() => {
+    const btn = document.getElementById('btnCopy');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Uplinked!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── HELPERS ──
+function esc(str) {
+  return (str||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  if (e.metaKey && e.key === 'Enter')  { e.preventDefault(); generate(); }
+  if (e.metaKey && e.key === ' ')      { e.preventDefault(); addEntry(); }
+});
+
+// ── WIRE UP BUTTONS ──
+document.getElementById('btnAdd').addEventListener('click', () => addEntry());
+document.getElementById('btnGenerate').addEventListener('click', generate);
+document.getElementById('btnClear').addEventListener('click', () => showConfirm(clearAll));
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+document.getElementById('btnCopy').addEventListener('click', copyAsText);
+
+// ── INIT ──
+updateApiKeyBtn();
+if (!restoreEntries()) addEntry();
+if (!getApiKey()) showApiModal();
+</script>
+</body>
+</html>
