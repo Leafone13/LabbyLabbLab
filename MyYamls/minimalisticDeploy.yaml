@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: minimalisticDeploy
+  name: minimalisticDeploy
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: minimalisticDeploy
+  template:
+    metadata:
+      labels:
+        app: minimalisticDeploy
+    spec:
+      containers:
+      - image: httpd
+        name: httpd
