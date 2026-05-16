@@ -1,0 +1,9 @@
+# traefik-namespace.yaml
+
+# Create a dedicated namespace for Traefik components
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traefik
+  labels:
+    app.kubernetes.io/name: traefik
